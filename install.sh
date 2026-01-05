@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Git should already be installed
+# Git should already be installed to clone the repo
+# Otherwise download it via curl or wget
 
 # Root is required
 if [[ $EUID -ne 0 ]]; then
