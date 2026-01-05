@@ -25,7 +25,7 @@ cp index.html /var/www/html
 
 # Set the web GUI and play-music scripts to start on reboot by adding them to cron
 NEW_JOB1="@reboot python3 /usr/local/bin/server.py > /dev/null 2>&1 &"
-NEW_JOB2="@reboot /usr/local/bin/play-music &""
+NEW_JOB2="@reboot /usr/local/bin/play-music &"
 
 # Add the job only if it doesn't already exist
 (crontab -l 2>/dev/null; echo "$NEW_JOB1") | sort -u | crontab -
