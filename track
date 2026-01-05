@@ -1,0 +1,11 @@
+#!/bin/bash
+
+current_file=$(readlink /proc/$(pidof mplayer)/fd/* | grep -v '\(/dev/\|pipe:\|socket:\)' | tail -n 1 | sed 's|^/mnt/music|.|')
+
+# Search for the current file in the playlist and get its line number
+TRACK_NUMBER=$(grep -nF "$current_file" /mnt/music/playlist | cut -d: -f1)
+
+# Get the total number of tracks for context (e.g., "Track 5 of 1200")
+TOTAL_TRACKS=$(wc -l < /mnt/music/playlist)
+
+echo "Playing: Track $TRACK_NUMBER of $TOTAL_TRACKS"
