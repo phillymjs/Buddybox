@@ -1,145 +1,160 @@
 #!/usr/bin/env python3
 import os
 import subprocess
+import json
+import datetime
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-# Configuration - All Absolute Paths
+# Configuration
 WEB_DIR = "/var/www/html"
-CURRENT_INFO = os.path.join(WEB_DIR, "current.txt")
 LAST_SYNC_FILE = os.path.join(WEB_DIR, "lastsync")
 REMOVALS_LOG = "/home/administrator/removals.txt"
 FIXTAGS_LOG = "/home/administrator/fixtags.txt"
 MUSIC_DIR = "/mnt/music"
+PLAYLIST_PATH = os.path.join(MUSIC_DIR, "playlist")
 PORT = 80
 
-class MplayerHandler(SimpleHTTPRequestHandler):
-    
-    def get_track_count(self):
-        """Executes the find command to count music files in the music directory."""
-        try:
-            cmd = f"find {MUSIC_DIR} -type f \( -iname '*.mp3' -o -iname '*.m4a' ! -name '.*' \) | wc -l"
-            count = subprocess.check_output(cmd, shell=True).decode().strip()
-            return count
-        except Exception:
-            return "0"
+class State:
+    current_file = None
+    metadata = []
+    total_count = "0"
+    track_index = "0"
 
-    def append_to_list(self, log_path):
-        """Helper to read current.txt and append it to a log file."""
+class MplayerHandler(SimpleHTTPRequestHandler):
+
+    def get_current_file_path(self):
         try:
-            if not os.path.exists(CURRENT_INFO):
-                content = "No track info found."
-            else:
-                with open(CURRENT_INFO, "r") as f:
-                    content = f.read().strip()
+            pid_cmd = ["pidof", "mplayer"]
+            pid = subprocess.check_output(pid_cmd).decode().strip()
+            fd_path = f"/proc/{pid}/fd/"
+            for fd in os.listdir(fd_path):
+                full_fd = os.path.join(fd_path, fd)
+                try:
+                    target = os.readlink(full_fd)
+                    if target.startswith(MUSIC_DIR) and (target.endswith(".mp3") or target.endswith(".m4a")):
+                        return target
+                except:
+                    continue
+            return None
+        except:
+            return None
+
+    def update_counts(self, path):
+        try:
+            if State.total_count == "0":
+                find_cmd = ["find", MUSIC_DIR, "-type", "f", "(", "-iname", "*.mp3", "-o", "-iname", "*.m4a", ")", "!", "-path", "*/.*", "!", "-name", "._*"]
+                find_out = subprocess.check_output(find_cmd)
+                State.total_count = str(len(find_out.decode().splitlines()))
+
+            if path:
+                filename = os.path.basename(path)
+                grep_cmd = ["grep", "-nF", filename, PLAYLIST_PATH]
+                result = subprocess.check_output(grep_cmd).decode().strip()
+                if result:
+                    State.track_index = result.split(":")[0]
+                else:
+                    State.track_index = "0"
+        except:
+            State.track_index = "0"
+
+    def update_metadata(self, path):
+        if path == State.current_file and State.metadata:
+            return 
+
+        State.current_file = path
+        try:
+            cmd = ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", path]
+            output = subprocess.check_output(cmd).decode()
+            data = json.loads(output)
+            tags = data.get("format", {}).get("tags", {})
             
-            with open(log_path, "a") as log:
-                log.write("=" * 30 + "\n")
-                log.write(content + "\n\n")
-            return True
-        except Exception as e:
-            print(f"Error logging to {log_path}: {e}")
-            return False
+            # 1. Look for Title tags
+            title = tags.get("title") or tags.get("TITLE") or tags.get("©nam")
+            
+            # 2. Fallback: Use filename without the extension
+            if not title:
+                title = os.path.splitext(os.path.basename(path))[0]
+                
+            # 3. Get Artist/Album/Year
+            artist = tags.get("artist") or tags.get("ARTIST") or tags.get("©ART") or "Unknown Artist"
+            album = tags.get("album") or tags.get("ALBUM") or tags.get("©alb") or ""
+            
+            year_val = tags.get("date") or tags.get("DATE") or tags.get("original_date") or tags.get("©day") or ""
+            year = str(year_val)[:4] if year_val else ""
+            
+            State.metadata = [artist, title, album, year]
+        except:
+            State.metadata = ["Metadata Error", os.path.basename(path), "", ""]
+
+    def get_playlist_time(self):
+        try:
+            if os.path.exists(PLAYLIST_PATH):
+                mtime = os.path.getmtime(PLAYLIST_PATH)
+                dt = datetime.datetime.fromtimestamp(mtime)
+                # This will return "January 8, 2026 • 8:11 PM"
+                return dt.strftime("%B %-d, %Y • %-I:%M %p")
+            return "Unknown"
+        except:
+            return "Unknown"
 
     def do_GET(self):
-        # Normalize path to ignore query strings (cache busters)
         clean_path = self.path.split('?')[0]
 
-        # 1. Track Count Endpoint
-        if clean_path == '/trackcount':
-            count = self.get_track_count()
+        if clean_path == '/api/status':
+            path = self.get_current_file_path()
+            if not path:
+                State.current_file = None
+                response = {
+                    "lines": ["Not Playing"], 
+                    "stats": "", 
+                    "playlist_time": self.get_playlist_time()
+                }
+            else:
+                self.update_metadata(path)
+                self.update_counts(path)
+                response = {
+                    "lines": State.metadata,
+                    "stats": f"Track {State.track_index} of {State.total_count}",
+                    "playlist_time": self.get_playlist_time()
+                }
+
             self.send_response(200)
-            self.send_header("Content-type", "text/plain")
+            self.send_header("Content-type", "application/json")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.end_headers()
-            self.wfile.write(count.encode())
+            self.wfile.write(json.dumps(response).encode())
             return
 
-        # 2. Last Sync Endpoint
         elif clean_path == '/lastsync':
             content = "Unknown"
             if os.path.exists(LAST_SYNC_FILE):
-                with open(LAST_SYNC_FILE, "r") as f:
-                    content = f.read().strip()
+                with open(LAST_SYNC_FILE, "r") as f: content = f.read().strip()
             self.send_response(200)
             self.send_header("Content-type", "text/plain")
             self.end_headers()
             self.wfile.write(content.encode())
             return
 
-        # 3. Handle current.txt to prevent 404s when music is off
-        elif clean_path == '/current.txt':
-            if not os.path.exists(CURRENT_INFO):
-                self.send_response(200)
-                self.send_header("Content-type", "text/plain")
-                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-                self.end_headers()
-                self.wfile.write(b"Not Playing")
-                return
-            # If exists, fall through to super().do_GET()
-
-        # 4. Media Controls
         elif clean_path in ['/pause', '/next', '/prev']:
-            subprocess.run([f"/usr/local/bin{clean_path}"])
+            subprocess.run([f"/usr/local/bin/{clean_path.strip('/')}"])
             self.send_response(200)
             self.end_headers()
             return
 
-        # 5. Library Management
-        elif clean_path == '/sick':
-            if self.append_to_list(REMOVALS_LOG):
-                subprocess.run(["/usr/local/bin/next"])
-                self.send_response(200)
-                self.end_headers()
-                self.wfile.write(b"Logged and Skipped")
+        elif clean_path in ['/sick', '/fix']:
+            log = REMOVALS_LOG if clean_path == '/sick' else FIXTAGS_LOG
+            if State.current_file:
+                with open(log, "a") as l: l.write("="*30 + "\n" + State.current_file + "\n\n")
+            if clean_path == '/sick': subprocess.run(["/usr/local/bin/next"])
+            self.send_response(200)
+            self.end_headers()
             return
 
-        elif clean_path == '/fix':
-            if self.append_to_list(FIXTAGS_LOG):
-                self.send_response(200)
-                self.end_headers()
-                self.wfile.write(b"Logged")
-            return
-
-        # 6. Standard File Serving (index.html, etc.)
         super().do_GET()
 
-def is_mplayer_running():
-    """Check if mplayer is currently active."""
-    try:
-        subprocess.check_output(["pgrep", "mplayer"])
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
 if __name__ == '__main__':
-    # Ensure environment is ready
-    if not os.path.exists(WEB_DIR):
-        os.makedirs(WEB_DIR, exist_ok=True)
-    
+    os.makedirs(WEB_DIR, exist_ok=True)
     os.chdir(WEB_DIR)
-
-    # Cleanup stale current.txt if music isn't playing
-    if not is_mplayer_running() and os.path.exists(CURRENT_INFO):
-        try:
-            os.remove(CURRENT_INFO)
-            print("Cleanup: mplayer not running, removed stale current.txt")
-        except Exception as e:
-            print(f"Cleanup Error: {e}")
-    
-    # Ensure logs exist and are writable
-    for log in [REMOVALS_LOG, FIXTAGS_LOG]:
-        if not os.path.exists(log):
-            try:
-                open(log, 'a').close()
-                os.chmod(log, 0o666)
-            except Exception as e:
-                print(f"Warning: Could not initialize {log}: {e}")
-
-    # Start Server
     server = HTTPServer(('0.0.0.0', PORT), MplayerHandler)
     print(f"Music Server running at http://0.0.0.0:{PORT}")
-    
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down server.")
-        server.server_close()
+    server.serve_forever()
