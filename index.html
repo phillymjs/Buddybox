@@ -1,186 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Music Dashboard</title>
-    <style>
-        body { 
-            font-family: 'Segoe UI', system-ui, sans-serif; 
-            background: #121212; 
-            color: white; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-            overscroll-behavior: none;
-        }
-
-        #player { 
-            background: #1e1e1e; 
-            padding: 2rem; 
-            border-radius: 20px; 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8); 
-            width: 85%;
-            max-width: 380px; 
-            text-align: center;
-        }
-
-        h2 { 
-            color: #1DB954; 
-            font-size: 0.8rem; 
-            text-transform: uppercase; 
-            letter-spacing: 3px; 
-            margin-bottom: 1.5rem;
-            margin-top: 0;
-        }
-
-        pre { 
-            white-space: pre-wrap; 
-            font-size: 1.1rem; 
-            line-height: 1.5;
-            min-height: 90px; 
-            border-bottom: 1px solid #333; 
-            padding-bottom: 1.5rem; 
-            margin-bottom: 2rem;
-            font-family: inherit;
-            color: #eeeeee;
-        }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Buddybox v2.0</title>
+        <style>
+            body { 
+                font-family: 'Segoe UI', system-ui, sans-serif; 
+                background: #121212; color: white; 
+                display: flex; justify-content: center; align-items: center; 
+                height: 100vh; margin: 0; overscroll-behavior: none;
+            }
+            
+            #player { 
+                background: #1e1e1e; padding: 2rem; border-radius: 20px; 
+                box-shadow: 0 15px 35px rgba(0,0,0,0.8); 
+                width: 85%; max-width: 380px; text-align: center;
+            }
+            
+            h2 { 
+                color: #1DB954; font-size: 0.8rem; text-transform: uppercase; 
+                letter-spacing: 3px; margin-bottom: 1.5rem; margin-top: 0;
+            }
+            
+            /* Main Track Info Styling */
+            #track-info { 
+                font-size: 1.1rem; line-height: 1.4;
+                min-height: 100px;
+                color: #eeeeee;
+                margin-bottom: 0.5rem;
+            }
+            
+            .track-line { margin-bottom: 2px; }
+            .track-title { color: #1DB954; font-size: 1.2rem; }
+            
+            /* Track Stats (Track xx of yy) positioned above separator */
+            #track-stats {
+                color: #888;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-bottom: 4px; /* Pulls it close to the line */
+                display: block;
+            }
+            
+            /* Separator Line */
+            .separator {
+                border-bottom: 1px solid #333;
+                margin-bottom: 2rem; /* Space before the buttons */
+            }
+            
+            .row { display: grid; gap: 12px; }
+            .nav-row { grid-template-columns: 1fr 1fr 1fr; }
+            .meta-row { 
+                grid-template-columns: 1fr 1fr; margin-top: 20px;
+                padding-top: 20px; border-top: 1px dashed #444;
+            }
+            
+            button { 
+                background: #282828; color: white; border: none; 
+                padding: 12px 5px; border-radius: 12px; font-weight: bold; 
+                display: flex; flex-direction: column; align-items: center; gap: 8px;
+                cursor: pointer;
+                -webkit-tap-highlight-color: transparent;
+                user-select: none;
+            }
+            
+            button span.icon { font-size: 1.3rem; }
+            .meta-btn { background: #1a1a1a; font-size: 0.75rem; color: #888; }
+            
+            .stats-container { margin-top: 25px; }
+            .stats-line { color: #888; font-size: 0.75rem; font-weight: bold; margin: 0; }
+            
+            button:active { background: #1DB954 !important; transform: scale(0.95); transition: 0s; }
+            .meta-btn:active { background: #e91e63 !important; }
+        </style>
+    </head>
+    <body>
         
-        .row { 
-            display: grid; 
-            gap: 12px; 
-        }
-
-        .nav-row { grid-template-columns: 1fr 1fr 1fr; }
-        
-        .meta-row { 
-            grid-template-columns: 1fr 1fr; 
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px dashed #444;
-        }
-        
-        button { 
-            background: #282828; 
-            color: white; 
-            border: none; 
-            padding: 12px 5px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: background 0.1s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-        
-        button span.icon { font-size: 1.3rem; }
-
-        .meta-btn {
-            background: #1a1a1a;
-            font-size: 0.75rem;
-            color: #888;
-        }
-
-        /* NEW STATS STYLING */
-        .stats-container {
-            margin-top: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .stats-line {
-            color: #888; /* Matches the Sick/Fix button text color */
-            font-size: 0.75rem; /* Matches the Sick/Fix button font size */
-            font-weight: bold;
-            margin: 0;
-        }
-
-        @media (hover: hover) {
-            button:hover { background: #1DB954; color: white; }
-            .meta-btn:hover { background: #e91e63; color: white; }
-        }
-
-        button:active {
-            background: #1DB954 !important;
-            transform: scale(0.95);
-            transition: 0s;
-        }
-
-        .meta-btn:active {
-            background: #e91e63 !important;
-        }
-    </style>
-</head>
-<body ontouchstart="">
-
-    <div id="player">
-        <h2>Now Playing</h2>
-        <pre id="content">Loading...</pre>
-
-        <div class="row nav-row">
-            <button onclick="control('prev')">
-                <span class="icon">⏮</span><span>Prev</span>
-            </button>
-            <button onclick="control('pause')" id="pause-btn" style="background: #383838;">
-                <span class="icon">⏸</span><span>Pause</span>
-            </button>
-            <button onclick="control('next')">
-                <span class="icon">⏭</span><span>Next</span>
-            </button>
+        <div id="player">
+            <h2>Now Playing</h2>
+            
+            <div id="track-info">
+                <div id="artist" class="track-line">Loading...</div>
+                <div id="title" class="track-title track-line"></div>
+                <div id="album" class="track-line"></div>
+                <div id="year" class="track-line"></div>
+            </div>
+            
+            <span id="track-stats"></span>
+            <div class="separator"></div>
+            
+            <div class="row nav-row">
+                <button onclick="control('prev')"><span class="icon">⏮</span><span>Prev</span></button>
+                <button onclick="control('pause')" style="background: #383838;"><span class="icon">⏸</span><span>Pause</span></button>
+                <button onclick="control('next')"><span class="icon">⏭</span><span>Next</span></button>
+            </div>
+            
+            <div class="row meta-row">
+                <button class="meta-btn" onclick="control('sick')"><span class="icon">🗑️</span><span>Tired of This Song</span></button>
+                <button class="meta-btn" onclick="control('fix')"><span class="icon">🏷️</span><span>Tags Need Fixing</span></button>
+            </div>
+            
+            <div class="stats-container">
+                <p class="stats-line" id="playlist-generated">Playlist Generated: Loading...</p>
+                <p class="stats-line" id="sync-info">Loading...</p>
+            </div>
         </div>
-
-        <div class="row meta-row">
-            <button class="meta-btn" onclick="control('sick')">
-                <span class="icon">🗑️</span><span>Tired of This Song</span>
-            </button>
-            <button class="meta-btn" onclick="control('fix')">
-                <span class="icon">🏷️</span><span>Tags Need Fixing</span>
-            </button>
-        </div>
-
-        <div class="stats-container">
-            <p class="stats-line" id="sync-info">Last Sync: ---</p>
-            <p class="stats-line" id="track-count">Tracks Available: ---</p>
-        </div>
-    </div>
-
-    <script>
-        function control(action) {
-            fetch('/' + action).catch(err => console.error(err));
-        }
-
-        function updateTrack() {
-            fetch('current.txt?t=' + new Date().getTime())
-                .then(res => res.text())
-                .then(data => { document.getElementById('content').textContent = data; })
-                .catch(() => { document.getElementById('content').textContent = "Not Playing"; });
-        }
-
-        function updateStats() {
-            // Fetch Last Sync (January 4, 2026 • 6:17 pm style)
-            fetch('/lastsync')
+        
+        <script>
+            function control(action) { 
+                fetch('/' + action).then(() => {
+                    // This makes the UI refresh IMMEDIATELY after you click,
+                    // regardless of how slow your setInterval is.
+                    setTimeout(updateAll, 100); 
+                }); 
+            }
+            
+            function updateAll() {
+                fetch('/api/status?t=' + new Date().getTime())
+                .then(res => res.json())
+                .then(data => {
+                    const artist = document.getElementById('artist');
+                    const title = document.getElementById('title');
+                    const album = document.getElementById('album');
+                    const year = document.getElementById('year');
+                    
+                    if (data.lines && data.lines.length >= 2) {
+                        artist.textContent = data.lines[0];
+                        title.textContent = data.lines[1];
+                        album.textContent = data.lines[2] || "";
+                        year.textContent = data.lines[3] || "";
+                    } else {
+                        artist.textContent = "Not Playing";
+                        title.textContent = ""; album.textContent = ""; year.textContent = "";
+                    }
+                    
+                    // Update the Playlist Generated line
+                    if (data.playlist_time) {
+                        document.getElementById('playlist-generated').textContent = "Playlist Generated: " + data.playlist_time;
+                    }
+                    
+                    document.getElementById('track-stats').textContent = data.stats;
+                })
+                .catch(() => {
+                    // Only show offline if it fails consistently
+                    console.log("Syncing...");
+                });
+            }
+            
+            function updateSync() {
+                fetch('/lastsync')
                 .then(res => res.text())
                 .then(data => { document.getElementById('sync-info').textContent = "Last Sync: " + data; });
-
-            // Fetch Track Count
-            fetch('/trackcount')
-                .then(res => res.text())
-                .then(data => { document.getElementById('track-count').textContent = "Tracks Available: " + data; });
-        }
-
-        // Live update for track info
-        setInterval(updateTrack, 3000);
-
-        // Run once on page load
-        updateTrack();
-        updateStats();
-    </script>
-</body>
+            }
+            
+            // Polling at 1500ms for better button responsiveness
+            setInterval(updateAll, 1500);
+            
+            updateAll();
+            updateSync();
+        </script>
+    </body>
 </html>
