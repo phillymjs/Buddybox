@@ -15,57 +15,6 @@ cleanup() {
 # Trap signals for a clean exit
 trap cleanup SIGINT SIGTERM
 
-# Metadata Extraction
-update_track_info() {
-    local mp_pid=$1
-    # Identify the file currently open by mplayer via the proc filesystem
-    local info=$(readlink /proc/"$mp_pid"/fd/* 2>/dev/null | grep -v '\(/dev/\|pipe:\|socket:\)' | tail -n 1)
-
-    if [ -z "$info" ]; then
-        echo "Not Currently Playing" > "$STATUS_FILE"
-        return
-    fi
-
-    # Extract tags using ffprobe
-    local metadata=$(ffprobe -v error -show_entries format_tags=artist,album,title,date,TYER -of default=noprint_wrappers=1 "$info")
-    local artist=$(echo "$metadata" | grep -i "^TAG:artist=" | cut -d'=' -f2-)
-    local album=$(echo "$metadata" | grep -i "^TAG:album=" | cut -d'=' -f2-)
-    local title=$(echo "$metadata" | grep -i "^TAG:title=" | cut -d'=' -f2-)
-    
-    # Logic for Year/Date tags
-    local raw_date=$(echo "$metadata" | grep -i "^TAG:date=" | cut -d'=' -f2-)
-    [ -z "$raw_date" ] && raw_date=$(echo "$metadata" | grep -i "^TAG:TYER=" | cut -d'=' -f2-)
-    local year=$(echo "$raw_date" | grep -oE '[0-9]{4}' | head -n 1)
-
-    # Output to the web status file
-    {
-        echo "${artist:-[Artist Missing]}"
-        echo "\"${title:-[Title Missing]}\""
-        echo "${album:-[Album Missing]}"
-        echo "${year:-[Year Missing]}"
-    } > "$STATUS_FILE"
-}
-
-# Monitor the playback
-monitor_playback() {
-    local last_file=""
-    while true; do
-        local mp_pid=$(pidof mplayer)
-        
-        if [ -n "$mp_pid" ]; then
-            # Get the path of the file mplayer is currently reading
-            local current_file=$(readlink /proc/"$mp_pid"/fd/* 2>/dev/null | grep -v '\(/dev/\|pipe:\|socket:\)' | tail -n 1)
-            
-            # If the file has changed, update the status file
-            if [[ "$current_file" != "$last_file" && -n "$current_file" ]]; then
-                update_track_info "$mp_pid"
-                last_file="$current_file"
-            fi
-        fi
-        sleep 2
-    done
-}
-
 # Main
 
 # Clean up any stuck mplayer processes
@@ -76,7 +25,7 @@ sleep 5
 if [[ -b /dev/sda1 ]]; then
     if ! mountpoint -q /mnt/music; then
         mkdir -p /mnt/music
-        mount /dev/sda1 /mnt/music
+        mount -o utf8 /dev/sda1 /mnt/music
     fi
 else
     echo "USB drive not found, exiting"
@@ -106,9 +55,9 @@ mkfifo /tmp/mplayer-control
 chmod 666 /tmp/mplayer-control
 
 echo -n "Generating random playlist..."
-# This command includes .m4p files, which mplayer can't play due to DRM
-#find . -type f \( -iname "*.mp3" -o -iname "*.m4a" -o -iname "*.m4p" ! -name ".*" \) | sort -R > playlist
-find . -type f \( -iname "*.mp3" -o -iname "*.m4a" ! -name ".*" \) | sort -R > playlist
+echo "Generating Playlist..." > "$STATUS_FILE"
+#find . -type f \( -iname "*.mp3" -o -iname "*.m4a" ! -name ".*" \) | sort -R > playlist
+find . -type f \( -iname "*.mp3" -o -iname "*.m4a" \) ! -path "*/.*" ! -name "._*" | sort -R > playlist
 echo "done."
 
 # Unmute and set volume to 0%
@@ -117,9 +66,6 @@ amixer -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% unmute -M > /dev/null 2>&1
 # Start mplayer in background
 echo "Starting playback on $AUDIO_CARD..."
 (mplayer -ao alsa:device="$MPLAYER_DEVICE" -really-quiet -slave -noconsolecontrols -nomsgcolor -input file=/tmp/mplayer-control -playlist /mnt/music/playlist -loop 0 & echo "PID: $!") > "$mplayerDump" 2>&1 &
-
-# Launch monitoring loop in background
-monitor_playback &
 
 # [cite_start]Fade in music [cite: 8]
 echo "Fading in music to ${FADE_TARGET}%..."
