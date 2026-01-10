@@ -17,15 +17,15 @@ apt install -y mplayer ffmpeg
 
 # Make the files executable and put them in /usr/local/bin
 echo "Copying files"
-chmod +x play-music server.py pause next prev track
-cp play-music server.py pause next prev track /usr/local/bin/
+chmod +x play-music server.py pause next prev fade-in fade-out track
+cp play-music server.py pause next prev fade-in fade-out track /usr/local/bin/
 
 # Make the web directory and move index.html
 mkdir -p /var/www/html
 cp index.html /var/www/html
 
 # Set the web GUI and play-music scripts to start on reboot by adding them to cron
-NEW_JOB1="@reboot python3 /usr/local/bin/server.py > /dev/null 2>&1 &"
+NEW_JOB1="@reboot /usr/local/bin/server.py > /dev/null 2>&1 &"
 NEW_JOB2="@reboot /usr/local/bin/play-music &"
 
 # Add the job only if it doesn't already exist
