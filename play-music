@@ -65,14 +65,11 @@ amixer -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% unmute -M > /dev/null 2>&1
 
 # Start mplayer in background
 echo "Starting playback on $AUDIO_CARD..."
-(mplayer -ao alsa:device="$MPLAYER_DEVICE" -really-quiet -slave -noconsolecontrols -nomsgcolor -input file=/tmp/mplayer-control -playlist /mnt/music/playlist -loop 0 & echo "PID: $!") > "$mplayerDump" 2>&1 &
+(stdbuf -oL mplayer -ao alsa:device="$MPLAYER_DEVICE" -really-quiet -slave -noconsolecontrols -nomsgcolor -input file=/tmp/mplayer-control -playlist /mnt/music/playlist -loop 0 & echo "PID: $!") > "$mplayerDump" 2>&1 &
 
-# [cite_start]Fade in music [cite: 8]
+# Fade in music
 echo "Fading in music to ${FADE_TARGET}%..."
 for i in $(seq 0 "$FADE_TARGET"); do
     amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "${i}%" -M
     sleep 0.2
 done
-
-# Keep script alive to maintain background monitoring
-wait
