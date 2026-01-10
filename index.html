@@ -1,164 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Buddybox v2.0</title>
-        <style>
-            body { 
-                font-family: 'Segoe UI', system-ui, sans-serif; 
-                background: #121212; color: white; 
-                display: flex; justify-content: center; align-items: center; 
-                height: 100vh; margin: 0; overscroll-behavior: none;
-            }
-            
-            #player { 
-                background: #1e1e1e; padding: 2rem; border-radius: 20px; 
-                box-shadow: 0 15px 35px rgba(0,0,0,0.8); 
-                width: 85%; max-width: 380px; text-align: center;
-            }
-            
-            h2 { 
-                color: #1DB954; font-size: 0.8rem; text-transform: uppercase; 
-                letter-spacing: 3px; margin-bottom: 1.5rem; margin-top: 0;
-            }
-            
-            /* Main Track Info Styling */
-            #track-info { 
-                font-size: 1.1rem; line-height: 1.4;
-                min-height: 100px;
-                color: #eeeeee;
-                margin-bottom: 0.5rem;
-            }
-            
-            .track-line { margin-bottom: 2px; }
-            .track-title { color: #1DB954; font-size: 1.2rem; }
-            
-            /* Track Stats (Track xx of yy) positioned above separator */
-            #track-stats {
-                color: #888;
-                font-size: 0.75rem;
-                font-weight: bold;
-                margin-bottom: 4px; /* Pulls it close to the line */
-                display: block;
-            }
-            
-            /* Separator Line */
-            .separator {
-                border-bottom: 1px solid #333;
-                margin-bottom: 2rem; /* Space before the buttons */
-            }
-            
-            .row { display: grid; gap: 12px; }
-            .nav-row { grid-template-columns: 1fr 1fr 1fr; }
-            .meta-row { 
-                grid-template-columns: 1fr 1fr; margin-top: 20px;
-                padding-top: 20px; border-top: 1px dashed #444;
-            }
-            
-            button { 
-                background: #282828; color: white; border: none; 
-                padding: 12px 5px; border-radius: 12px; font-weight: bold; 
-                display: flex; flex-direction: column; align-items: center; gap: 8px;
-                cursor: pointer;
-                -webkit-tap-highlight-color: transparent;
-                user-select: none;
-            }
-            
-            button span.icon { font-size: 1.3rem; }
-            .meta-btn { background: #1a1a1a; font-size: 0.75rem; color: #888; }
-            
-            .stats-container { margin-top: 25px; }
-            .stats-line { color: #888; font-size: 0.75rem; font-weight: bold; margin: 0; }
-            
-            button:active { background: #1DB954 !important; transform: scale(0.95); transition: 0s; }
-            .meta-btn:active { background: #e91e63 !important; }
-        </style>
-    </head>
-    <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Buddybox v2.0</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: #121212; color: white; 
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; margin: 0; overscroll-behavior: none;
+        }
+
+        #player { 
+            background: #1e1e1e; padding: 2rem; border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8); 
+            width: 85%; max-width: 380px; text-align: center;
+        }
+
+        h2 { 
+            color: #1DB954; font-size: 0.8rem; text-transform: uppercase; 
+            letter-spacing: 3px; margin-bottom: 1.5rem; margin-top: 0;
+        }
+
+        #track-info { 
+            font-size: 1.1rem; line-height: 1.4;
+            min-height: 100px;
+            color: #eeeeee;
+            margin-bottom: 0.5rem;
+        }
+
+        .track-line { margin-bottom: 2px; }
+        .track-title { color: #1DB954; font-size: 1.2rem; }
+
+        #track-stats {
+            color: #888;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .separator {
+            border-bottom: 1px solid #333;
+            margin-bottom: 2rem;
+        }
+
+        .row { display: grid; gap: 12px; }
+        .nav-row { grid-template-columns: 1fr 1fr 1fr; }
+        .meta-row { 
+            grid-template-columns: 1fr 1fr; margin-top: 20px;
+            padding-top: 20px; border-top: 1px dashed #444;
+        }
         
-        <div id="player">
-            <h2>Now Playing</h2>
-            
-            <div id="track-info">
-                <div id="artist" class="track-line">Loading...</div>
-                <div id="title" class="track-title track-line"></div>
-                <div id="album" class="track-line"></div>
-                <div id="year" class="track-line"></div>
-            </div>
-            
-            <span id="track-stats"></span>
-            <div class="separator"></div>
-            
-            <div class="row nav-row">
-                <button onclick="control('prev')"><span class="icon">⏮</span><span>Prev</span></button>
-                <button onclick="control('pause')" style="background: #383838;"><span class="icon">⏸</span><span>Pause</span></button>
-                <button onclick="control('next')"><span class="icon">⏭</span><span>Next</span></button>
-            </div>
-            
-            <div class="row meta-row">
-                <button class="meta-btn" onclick="control('sick')"><span class="icon">🗑️</span><span>Tired of This Song</span></button>
-                <button class="meta-btn" onclick="control('fix')"><span class="icon">🏷️</span><span>Tags Need Fixing</span></button>
-            </div>
-            
-            <div class="stats-container">
-                <p class="stats-line" id="playlist-generated">Playlist Generated: Loading...</p>
-                <p class="stats-line" id="sync-info">Loading...</p>
-            </div>
+        button { 
+            background: #282828; color: white; border: none; 
+            padding: 12px 5px; border-radius: 12px; font-weight: bold; 
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        /* Consistent Green Icons */
+        button span.icon { 
+            color: #1DB954; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        button span.icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .meta-btn { background: #1a1a1a; font-size: 0.75rem; color: #888; }
+
+        .stats-container { margin-top: 25px; }
+        .stats-line { color: #888; font-size: 0.75rem; font-weight: bold; margin: 0; }
+
+        button:active { background: #1DB954 !important; color: black !important; transform: scale(0.95); transition: 0s; }
+        button:active span.icon { color: black !important; }
+        .meta-btn:active { background: #e91e63 !important; color: white !important; }
+    </style>
+</head>
+<body>
+
+    <div id="player">
+        <h2>Now Playing</h2>
+        
+        <div id="track-info">
+            <div id="artist" class="track-line">Loading...</div>
+            <div id="title" class="track-title track-line"></div>
+            <div id="album" class="track-line"></div>
+            <div id="year" class="track-line"></div>
         </div>
-        
-        <script>
-            function control(action) { 
-                fetch('/' + action).then(() => {
-                    // This makes the UI refresh IMMEDIATELY after you click,
-                    // regardless of how slow your setInterval is.
-                    setTimeout(updateAll, 100); 
-                }); 
+
+        <span id="track-stats"></span>
+        <div class="separator"></div>
+
+        <div class="row nav-row">
+            <button onclick="control('prev')">
+                <span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 18V6h2v12H6zm3.5-6L18 18V6l-8.5 6z"/></svg></span>
+                <span>Prev</span>
+            </button>
+            <button id="play-pause-btn" onclick="control('pause')" style="background: #383838;">
+                <span class="icon" id="status-icon">
+                    <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 19h4V5h-4v14zm-8 0h4V5H6v14z"/></svg>
+                </span>
+                <span>Pause</span>
+            </button>
+            <button onclick="control('next')">
+                <span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></span>
+                <span>Next</span>
+            </button>
+        </div>
+
+        <div class="row meta-row">
+            <button class="meta-btn" onclick="control('sick')">
+                <span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></span>
+                <span>Tired of This</span>
+            </button>
+            <button class="meta-btn" onclick="control('fix')">
+                <span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"/></svg></span>
+                <span>Fix Tags</span>
+            </button>
+        </div>
+
+        <div class="stats-container">
+            <p class="stats-line" id="playlist-generated">Playlist Generated: Loading...</p>
+            <p class="stats-line" id="sync-info">Loading...</p>
+        </div>
+    </div>
+
+<script>
+function control(action) { 
+    fetch('/' + action).then(() => {
+        setTimeout(updateAll, 100); 
+    }); 
+}
+
+function updateAll() {
+    fetch('/api/status?t=' + new Date().getTime())
+        .then(res => res.json())
+        .then(data => {
+            const artist = document.getElementById('artist');
+            const title = document.getElementById('title');
+            const album = document.getElementById('album');
+            const year = document.getElementById('year');
+            const playPauseBtn = document.getElementById('play-pause-btn');
+            
+            if (data.lines && data.lines.length >= 2) {
+                artist.textContent = data.lines[0];
+                title.textContent = data.lines[1];
+                album.textContent = data.lines[2] || "";
+                year.textContent = data.lines[3] || "";
+            } else {
+                artist.textContent = "Not Playing";
+                title.textContent = ""; album.textContent = ""; year.textContent = "";
             }
-            
-            function updateAll() {
-                fetch('/api/status?t=' + new Date().getTime())
-                .then(res => res.json())
-                .then(data => {
-                    const artist = document.getElementById('artist');
-                    const title = document.getElementById('title');
-                    const album = document.getElementById('album');
-                    const year = document.getElementById('year');
-                    
-                    if (data.lines && data.lines.length >= 2) {
-                        artist.textContent = data.lines[0];
-                        title.textContent = data.lines[1];
-                        album.textContent = data.lines[2] || "";
-                        year.textContent = data.lines[3] || "";
-                    } else {
-                        artist.textContent = "Not Playing";
-                        title.textContent = ""; album.textContent = ""; year.textContent = "";
-                    }
-                    
-                    // Update the Playlist Generated line
-                    if (data.playlist_time) {
-                        document.getElementById('playlist-generated').textContent = "Playlist Generated: " + data.playlist_time;
-                    }
-                    
-                    document.getElementById('track-stats').textContent = data.stats;
-                })
-                .catch(() => {
-                    // Only show offline if it fails consistently
-                    console.log("Syncing...");
-                });
+
+            if (playPauseBtn) {
+                const iconContainer = document.getElementById('status-icon');
+                const text = playPauseBtn.querySelector('span:not(.icon)');
+                
+                if (data.paused) {
+                    // Play Path
+                    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+                    text.textContent = "Play";
+                } else {
+                    // Pause Path
+                    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 19h4V5h-4v14zm-8 0h4V5H6v14z"/></svg>';
+                    text.textContent = "Pause";
+                }
             }
-            
-            function updateSync() {
-                fetch('/lastsync')
-                .then(res => res.text())
-                .then(data => { document.getElementById('sync-info').textContent = "Last Sync: " + data; });
+
+            if (data.playlist_time) {
+                document.getElementById('playlist-generated').textContent = "Playlist Generated: " + data.playlist_time;
             }
-            
-            // Polling at 1500ms for better button responsiveness
-            setInterval(updateAll, 1500);
-            
-            updateAll();
-            updateSync();
-        </script>
-    </body>
+
+            document.getElementById('track-stats').textContent = data.stats;
+        })
+        .catch(() => {
+            console.log("Syncing...");
+        });
+}
+
+function updateSync() {
+    fetch('/lastsync')
+        .then(res => res.text())
+        .then(data => { document.getElementById('sync-info').textContent = "Last Sync: " + data; });
+}
+
+setInterval(updateAll, 1500);
+updateAll();
+updateSync();
+</script>
+</body>
 </html>
