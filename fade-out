@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Audio Hardware Detection
+if aplay -l | grep -q "\[USB2.0 Device\]"; then
+	AUDIO_CARD="Device"
+	MPLAYER_DEVICE="plughw=Device"
+	MIXER_CONTROL="PCM"
+	FADE_TARGET=40
+else
+	AUDIO_CARD="Headphones"
+	MPLAYER_DEVICE="plughw=Headphones"
+	MIXER_CONTROL="PCM"
+	FADE_TARGET=85
+fi
+
+# Fade out music
+for i in $(seq "$FADE_TARGET" -1 0 ); do
+	amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "${i}%" -M
+	sleep 0.2
+done
+amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% mute -M > /dev/null 2>&1
+echo "pausing_keep_force pause" > /tmp/mplayer-control
