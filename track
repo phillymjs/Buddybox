@@ -1,11 +1,26 @@
 #!/bin/bash
 
-current_file=$(readlink /proc/$(pidof mplayer)/fd/* | grep -v '\(/dev/\|pipe:\|socket:\)' | tail -n 1 | sed 's|^/mnt/music|.|')
+current_file=$(readlink /proc/$(pidof mplayer)/fd/* | grep -v '\(/dev/\|pipe:\|socket:\)' | tail -n 1 )
+current_file_playlist_path=$(echo "$current_file" | sed 's|^/mnt/music|.|')
 
 # Search for the current file in the playlist and get its line number
-TRACK_NUMBER=$(grep -nF "$current_file" /mnt/music/playlist | cut -d: -f1)
+TRACK_NUMBER=$(grep -nF "$current_file_playlist_path" /mnt/music/playlist | cut -d: -f1)
 
 # Get the total number of tracks for context (e.g., "Track 5 of 1200")
 TOTAL_TRACKS=$(wc -l < /mnt/music/playlist)
 
-echo "Playing: Track $TRACK_NUMBER of $TOTAL_TRACKS"
+metadata=$(ffprobe -v error -show_entries format_tags=artist,album,title,date,TYER -of default=noprint_wrappers=1 "$current_file")
+artist=$(echo "$metadata" | grep -i "^TAG:artist=" | cut -d'=' -f2-)
+album=$(echo "$metadata" | grep -i "^TAG:album=" | cut -d'=' -f2-)
+title=$(echo "$metadata" | grep -i "^TAG:title=" | cut -d'=' -f2-)
+
+# Logic for Year/Date tags
+raw_date=$(echo "$metadata" | grep -i "^TAG:date=" | cut -d'=' -f2-)
+[ -z "$raw_date" ] && raw_date=$(echo "$metadata" | grep -i "^TAG:TYER=" | cut -d'=' -f2-)
+year=$(echo "$raw_date" | grep -oE '[0-9]{4}' | head -n 1)
+
+echo "Artist: ${artist:-[Artist Missing]}"
+echo "Title : ${title:-[Title Missing]}"
+echo "Album : ${album:-[Album Missing]}"
+echo "Year  : ${year:-[Year Missing]}"
+echo "Track : $TRACK_NUMBER / $TOTAL_TRACKS"
