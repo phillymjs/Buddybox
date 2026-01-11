@@ -203,6 +203,21 @@ function updateSync() {
         .then(data => { document.getElementById('sync-info').textContent = "Last Sync: " + data; });
 }
 
+window.addEventListener('keydown', function(e) {
+    switch(e.code) {
+        case 'Space':
+            e.preventDefault(); // Stop page from scrolling
+            control('pause');
+            break;
+        case 'ArrowRight':
+            control('next');
+            break;
+        case 'ArrowLeft':
+            control('prev');
+            break;
+    }
+});
+
 setInterval(updateAll, 1500);
 updateAll();
 updateSync();
