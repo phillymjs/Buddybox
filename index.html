@@ -60,9 +60,10 @@
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            outline: none;
+            transition: transform 0.05s;
         }
         
-        /* Consistent Green Icons */
         button span.icon { 
             color: #1DB954; 
             display: flex; 
@@ -79,12 +80,24 @@
         .stats-container { margin-top: 25px; }
         .stats-line { color: #888; font-size: 0.75rem; font-weight: bold; margin: 0; }
 
-        button:active { background: #1DB954 !important; color: black !important; transform: scale(0.95); transition: 0s; }
-        button:active span.icon { color: black !important; }
-        .meta-btn:active { background: #e91e63 !important; color: white !important; }
+        /* Mobile-Ready Active States */
+        button:active { 
+            background: #1DB954 !important; 
+            color: white !important; 
+            transform: scale(0.92); 
+        }
+        
+        button:active span.icon { 
+            color: white !important; 
+        }
+
+        .meta-btn:active { 
+            background: #e91e63 !important; 
+            color: white !important; 
+        }
     </style>
 </head>
-<body>
+<body ontouchstart="">
 
     <div id="player">
         <h2>Now Playing</h2>
@@ -165,11 +178,9 @@ function updateAll() {
                 const text = playPauseBtn.querySelector('span:not(.icon)');
                 
                 if (data.paused) {
-                    // Play Path
                     iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
                     text.textContent = "Play";
                 } else {
-                    // Pause Path
                     iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 19h4V5h-4v14zm-8 0h4V5H6v14z"/></svg>';
                     text.textContent = "Pause";
                 }
