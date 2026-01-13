@@ -26,12 +26,14 @@ In the old version, if I wanted to add new music I had shut down the Pi, transfe
 
 ### Installation
 
-Make sure you have a root prompt.
-Do a git clone or curl the repo to your local machine.
-CD into the repo's directory, make sure install.sh is executable, and execute it.
+- Make sure you have a root prompt.
+- Do a git clone or curl the repo to your local machine.
+- CD into the repo's directory, make sure install.sh is executable, and execute it.
 
 Install.sh will offer to install all available updates, then install the needed components for the scripts: mpv, ffmpeg, socat, bc, and jq
+
 After that it will copy all the scripts to /usr/local/bin, create /var/www/html and copy index.html into it.
+
 Finally, it adds two items to the crontab to launch buddybox and buddyboxUI.py on reboot.
 
 ### Usage
@@ -72,7 +74,7 @@ To add the current track to the "Fix Tags" list:
 
 `http://[server name or IP]/fix`
 
-There is one function only accessible this way: fading in and out.
+There is one function only accessible this way: fading in or out.
 
 To fade out the music:
 
