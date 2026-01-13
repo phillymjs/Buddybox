@@ -36,7 +36,7 @@ Finally, it adds two items to the crontab to launch buddybox and buddyboxUI.py o
 
 Point your browser to `http://[server name or IP]`
 
-<img src="https://git.stango.org/mstango/Buddybox/raw/branch/main/buddyboxUI.png" alt="GUI Screenshot" style="width: 40%;">
+<img src="https://git.stango.org/mstango/Buddybox/raw/branch/main/buddyboxUI.png" alt="GUI Screenshot" width="450">
 
 The track info area will either show "Not Playing" or the artist, title, album, and album release year.
 
