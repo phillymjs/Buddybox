@@ -26,8 +26,8 @@ apt install -y mplayer ffmpeg socat bc jq
 
 # Make the files executable and copy them to /usr/local/bin
 echo "Copying files"
-chmod +x buddybox buddyboxUI.py pause next prev fade-in fade-out track
-cp buddybox buddyboxUI.py pause next prev fade-in fade-out track /usr/local/bin/
+chmod +x buddybox buddyboxUI.py bb-pause bb-next bb-prev bb-fade bb-track
+cp buddybox buddyboxUI.py bb-pause bb-next bb-prev bb-fade bb-track /usr/local/bin/
 
 # Make the web directory and copy index.html to it
 mkdir -p /var/www/html
