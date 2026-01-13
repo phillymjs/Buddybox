@@ -94,4 +94,4 @@ The previous incarnation of Buddybox would create a fresh playlist every time it
 
 By necessity, creation of the playlist will be broken out into a separate script for this, as well.
 
-I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist. It will also have to gracefully switching to the new playlist when the last track on the old one finishes playing.
+I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist. It will also have to handle gracefully switching to the new playlist when the last track on the old one finishes playing.
