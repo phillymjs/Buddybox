@@ -6,7 +6,7 @@ Much-improved version of a Raspberry Pi-based music player I first created in 20
 
 I used to keep a radio playing to keep my pet birds company when I'm not in the room with them or not at home. Over time, I got absolutely sick to death of hearing the same two dozen or so songs, and the ads were constant and obnoxious. I could have just found a cheap MP3 player, but where's the fun in that? I also had a very specific set of requirements in mind and I couldn't guarantee some cheap piece of crap from Amazon would meet all of them. Since I had been given a free Raspberry Pi 2, I decided to use it for this and set out to make a simple music player that was completely self-contained, that needed no network access, and that would start up and automatically play only the music I liked, for as long as it had power. Since I thought of it as a jukebox and the bird I had at the time was named Buddy, I called the project Buddybox.
 
-The current version is built on mpv, but the original was built upon mplayer. There was a little more to it even in the first version, but basically the buddybox script ran a find command to create a random playlist of all the music files on the thumbdrive and then started mplayer playing that list (the current version has a separate script for playlist creation). I use cron jobs to start and stop the music.
+The current version is built on mpv, but the original was built upon mplayer. There was a little more to it even in the first version, but basically the buddybox script ran a find command to create a random playlist of all the music files on the thumbdrive and then started mplayer playing that list on endless loop/ At least, it would have, if it wasn't set to reboot daily which made it regenerate its playlist. The current version also has a Python 3 script that provides the web GUI. I use cron jobs to start and stop the music.
 
 The music is supplied from my iTunes library (I know it's called Music.app now but I don't care). I have a specific playlist (basically just any song that is rated 4 or 5 stars) for the Buddybox. I run an AppleScript that generates a text file listing all the songs in that playlist, and then use rsync to copy those to a USB thumbdrive.
 
@@ -88,6 +88,8 @@ Likewise, to fade in the music:
 
 The above example will fade in the music over about five minutes.
 
+**Note that pressing the Play button in the UI or sending a pause API command will resume the playback immediately at the previous full volume.**
+
 ### Future Plans
 
 The previous incarnation of Buddybox would create a fresh playlist every time it was rebooted, and it rebooted every morning. This resulted in me still hearing some songs too frequently for my taste. To ensure maximum variety in the music I need to make sure the entire playlist is played before a new one is regenerated, reboot or not. That means enabling the playback to pick up where it left off in the playlist if mpv is terminated or the Pi is rebooted. I know how I'm going to do it, it just needs to be implemented. Since mplayer did not offer the ability to start from a specific track in a playlist, switching to mpv was the first step toward implementation.
@@ -95,3 +97,7 @@ The previous incarnation of Buddybox would create a fresh playlist every time it
 By necessity, creation of the playlist will be broken out into a separate script for this, as well.
 
 I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist. It will also have to handle gracefully switching to the new playlist when the last track on the old one finishes playing.
+
+I'm going to integrate this script with Home Assistant. I want it to automatically fade in/out the music when a certain lamp is turned on/off. I already have most of this figured out and just have to actually implement it.
+
+I'd like to move whatever I can into the Python script. I'm still a relative Python n00b, but I know bash like the back of my hand, so I stuck to what I knew in the interest of getting it up and running. I also leaned quite a bit on Gemini for the Python bits, but I reviewed its source and made my own adjustments. I learned more than one language by reading source code I didn't write and changing stuff to see what happened, so I expect Python will be somewhat the same.
