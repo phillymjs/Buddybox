@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the path to me
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+
 # Ensure runtime directory is set for audio services
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
@@ -24,7 +27,7 @@ sleep 2
 if [[ -b /dev/sda1 ]]; then
     if ! mountpoint -q /mnt/music; then
         mkdir -p /mnt/music
-        mount -o utf8 /dev/sda1 /mnt/music
+        mount -o defaults /dev/sda1 /mnt/music
     fi
 else
     echo "USB drive not found, exiting"
@@ -46,7 +49,7 @@ else
     DEFAULT_VOLUME=85
 fi
 
-cat << EOF > audio-device
+cat << EOF > "$SCRIPT_DIR/audio-device"
 AUDIO_CARD="$AUDIO_CARD"
 MPV_DEVICE="MPV_DEVICE"
 MIXER_CONTROL="$MIXER_CONTROL"
@@ -80,7 +83,7 @@ echo "Starting playback on $AUDIO_CARD..."
 # Brief sleep to allow mpv to initialize the audio device
 sleep 1
 
-. bb-fade in 20
+. $SCRIPT_DIR/bb-fade in 20
 
 # Fade in music
 #echo "Fading in music to ${DEFAULT_VOLUME}%..."

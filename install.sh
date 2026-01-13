@@ -40,3 +40,7 @@ NEW_JOB2="@reboot /usr/local/bin/buddybox &"
 # Add the job only if it doesn't already exist
 (crontab -l 2>/dev/null; echo "$NEW_JOB1") | sort -u | crontab -
 (crontab -l 2>/dev/null; echo "$NEW_JOB2") | sort -u | crontab -
+
+echo "Installation complete. Reboot to start playing or run this command:"
+echo
+echo "buddybox & buddyboxUI.py > /dev/null 2>&1 &"
