@@ -4,7 +4,7 @@ Much-improved version of a Raspberry Pi-based music player I first created in 20
 
 ### Background
 
-I used to keep a radio playing to keep my pet birds company when I'm not in the room with them or not at home. Over time, I got absolutely sick to death of hearing the same two dozen or so songs, and the ads were constant and obnoxious. I set out to make a simple, self-contained music player that would only play songs I liked. Since I thought of it as a jukebox and the bird I had at the time was named Buddy, I called the project Buddybox.
+I used to keep a radio playing to keep my pet birds company when I'm not in the room with them or not at home. Over time, I got absolutely sick to death of hearing the same two dozen or so songs, and the ads were constant and obnoxious. I could have just found an cheap MP3 player, but where's the fun in that? Since I had been given a free Raspberry Pi 2, I decided I needed a project and set out to make a simple, self-contained music player that would only play songs I liked. Since I thought of it as a jukebox and the bird I had at the time was named Buddy, I called the project Buddybox.
 
 The current version is built on mpv, but the original was built upon mplayer. There was a little more to it even in the first version, but basically the buddybox script ran a find command to create a random playlist of all the music files on the thumbdrive and then started mplayer playing that list (the current version has a separate script for playlist creation). I use cron jobs to start and stop the music.
 
@@ -14,13 +14,15 @@ The music is supplied from my iTunes library (I know it's called Music.app now b
 
 The 2026 version adds a few niceties that I've wanted for a while:
 
-I usually use the Buddybox with an old headphone-to-cassette adapter, with the other end in an under-counter clock radio's cassette player. The new version looks for a USB speaker when it starts up. If it finds one, it uses that, otherwise it falls back to headphone jack output. I did this because when I bring home a new pet bird I have to keep it quarantined in a separate room and cage for a month. Now I can easily set up a second, identical Buddybox with a USB speaker I have, and everything will work without me needing to adjust any scripts.
+It's going on a spare Raspberry Pi 3. After eight years of problem-free service, the Pi 2 will be retired with full honors (i.e. tossed in my junk box, probably never to be used again unless I run out of newer Pi units).
 
-The old version would just start playing at whatever volume the cassette player's physical knob was set to. The new version starts at 0% volume and fades in when it starts playing.
+I usually use the Buddybox with an old headphone-to-cassette adapter, with the business end permanently in an under-counter clock radio's cassette player. The new version looks for a USB speaker when it starts up. If it finds one, it uses that, otherwise it falls back to headphone jack output. I did this because when I bring home a new pet bird I have to keep it quarantined in a separate room and cage for a month. Now I can easily set up a second, identical Buddybox with a USB speaker I have, and everything will work without me needing to adjust any scripts.
+
+The old version would just start playing at whatever volume the cassette player's physical knob was set to. The new version starts at 0% volume and fades in when it starts playing. By default it fades in to 85% on headphones and 40% on my USB speaker.
 
 The old version required me to SSH in if I wanted to skip a track. I eventually added a shortcut on my iPhone so I could just triple-tap the back. If a song played that I didn't recognize, I'd have to use Shazam. The new one adds a web interface that displays track information and gives me a little control-- I can pause the music, and go to the next or previous track.There are also a couple buttons to aid in playlist management: Even with a few thousand songs on the thumbdrive, I do hear some frequently enough to get tired of them. The "Tired of This" button adds the track info to a text file and skips to the next track. When I update my Buddybox playlist in iTunes I can go through that list and remove songs on it from the playlist. The "Fix Tags" button adds the current track info to a different text file. If I spot an error in a song's displayed metadata, I can log it so I can go back later and fix it in iTunes.
 
-In the old version, if I wanted to add new music I had shut down the Pi, transfer the USB thumbdrive to my Mac, and run a local sync job. That was partly due to the old one running on a Pi 2 with a separate wi-fi dongle that was not great and frequently dropped off the network. The new one is on a Pi 3B and can handle network syncing-- I enabled public key auth for the root user so I can run a sync job over the network. Finding instructions to duplicate that setup is an exercise left for the reader.
+In the old version, if I wanted to add new music I had shut down the Pi, transfer the USB thumbdrive to my Mac, and run a local sync job. That was partly due to the old one running on a Pi 2 with a separate wi-fi dongle that was not great-- it frequently dropped off the network. Since the new one is on a Pi 3 with built in and more robust wireless networking, it can handle network syncing-- I enabled public key auth for the root user so I can run a sync job over the network. Finding instructions to duplicate that setup is an exercise left for the reader.
 
 ### Installation
 
@@ -50,17 +52,35 @@ Below that are the buttons for playlist management. The text files those buttons
 
 Below that are two date/timestamps: the time the current playlist was generated, and the last time I ran an rsync job to update the music on the USB drive. The former is auto-generated, the latter is currently set by my manually running `echo $(date +"%B %-d, %Y • %-I:%M %p" | sed "s/am$/AM/;s/pm$/PM/") > /var/www/html/lastsync` when I update the music.
 
-### API Calls 
+### API Calls
 
-There is one function not accessible from the GUI: fading in and out.
+Use the browser or a curl command with these URLs:
 
-To fade out the music, use the browser or a curl command with this URL:
+To toggle playback:
+
+`http://[server name or IP]/pause`
+
+To move to the previous track or the next track:
+
+`http://[server name or IP]/prev` or `http://[server name or IP]/next`
+
+To add the current track to the "Sick of This" list:
+
+`http://[server name or IP]/sick`
+
+To add the current track to the "Fix Tags" list:
+
+`http://[server name or IP]/fix`
+
+There is one function only accessible this way: fading in and out.
+
+To fade out the music:
 
 `http://[server name or IP]/fade-out?60`
 
 The above example will fade out the music over about a minute (the timing on fades is less than exact in my testing, but close enough for me).
 
-Likewise, to fade in the music, use the browser or a curl command with this URL:
+Likewise, to fade in the music:
 
 `http://[server name or IP]/fade-in?300`
 
