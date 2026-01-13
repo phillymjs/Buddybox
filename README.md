@@ -90,8 +90,8 @@ The above example will fade in the music over about five minutes.
 
 ### Future Plans
 
-The previous incarnation of Buddybox would create a fresh playlist every time it was rebooted, and it rebooted every morning. This resulted in me still hearing some songs too frequent for my taste. To ensure maximum variety in the music I'm hearing I need to make sure the entire playlist is played before a new one is regenerated, reboot or not. That means enabling the playback to pick up where it left off in the playlist if mpv is terminated or the Pi is rebooted. I know how I'm going to do it, it just needs to be implemented. Since mplayer did not offer the ability to start from a specific track in a playlist that I needed to do this, switching to mpv was the first step.
+The previous incarnation of Buddybox would create a fresh playlist every time it was rebooted, and it rebooted every morning. This resulted in me still hearing some songs too frequently for my taste. To ensure maximum variety in the music I need to make sure the entire playlist is played before a new one is regenerated, reboot or not. That means enabling the playback to pick up where it left off in the playlist if mpv is terminated or the Pi is rebooted. I know how I'm going to do it, it just needs to be implemented. Since mplayer did not offer the ability to start from a specific track in a playlist, switching to mpv was the first step toward implementation.
 
-The creation of the playlist will be broken out into a separate script for this, as well.
+By necessity, creation of the playlist will be broken out into a separate script for this, as well.
 
-I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist.
+I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist. It will also have to gracefully switching to the new playlist when the last track on the old one finishes playing.
