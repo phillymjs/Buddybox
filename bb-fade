@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the path to me
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+
 # Use the first argument if it exists, otherwise default to 60
 DIRECTION=$1
 DURATION=${2:-60}
@@ -9,7 +12,7 @@ SOCKET="/tmp/mpv-socket"
 # Get paused status
 PAUSED=$(echo '{ "command": ["get_property", "pause"] }' | socat - /tmp/mpv-socket | jq '.data')
 
-source audio-device
+source $SCRIPT_DIR/audio-device
 if [ "$DIRECTION" = "in" ]; then
 VOLUME=$DEFAULT_VOLUME
 else
