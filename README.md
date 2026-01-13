@@ -14,7 +14,7 @@ The music is supplied from my iTunes library (I know it's called Music.app now b
 
 The 2026 version adds a few niceties that I've wanted for a while:
 
-I usually use the Buddybox with an old headphone-to-cassette adapter, with the other end in an under-counter clock radio's cassette player. The new version looks for a USB speaker when it starts up. If it finds one, it uses that, otherwise it falls back to headphone jack output. I did this because when I bring home a new pet bird I have to keep it quarantined in a separate room and cage for a month, now I can easily set up a second, identical Buddybox with a USB speaker I have, and everything will work without me needing to adjust any scripts.
+I usually use the Buddybox with an old headphone-to-cassette adapter, with the other end in an under-counter clock radio's cassette player. The new version looks for a USB speaker when it starts up. If it finds one, it uses that, otherwise it falls back to headphone jack output. I did this because when I bring home a new pet bird I have to keep it quarantined in a separate room and cage for a month. Now I can easily set up a second, identical Buddybox with a USB speaker I have, and everything will work without me needing to adjust any scripts.
 
 The old version would just start playing at whatever volume the cassette player's physical knob was set to. The new version starts at 0% volume and fades in when it starts playing.
 
@@ -44,15 +44,15 @@ The track info area will either show "Not Playing" or the artist, title, album, 
 
 Just below that it says which track is being played and the count of tracks in the playlist.
 
-Below that are the Prev, Pause, and Next buttons, which I'd hope are self-explanatory. The Pause button will turn into a "Play" button when playback is paused.
+Below that are the Prev, Pause, and Next buttons, which I'd hope are self-explanatory. The Pause button will turn into a "Play" button when playback is paused, as it was when the above screenshot was taken.
 
-Below that are the buttons for playlist management. The text files those buttons create go in /home/administrator.
+Below that are the buttons for playlist management. The text files those buttons create go in /home/administrator-- if you use a different default account on the Pi, you'll obviously have to change that.
 
 Below that are two date/timestamps: the time the current playlist was generated, and the last time I ran an rsync job to update the music on the USB drive. The former is auto-generated, the latter is currently set by my manually running `echo $(date +"%B %-d, %Y • %-I:%M %p" | sed "s/am$/AM/;s/pm$/PM/") > /var/www/html/lastsync` when I update the music.
 
 ### API Calls 
 
-There is one function not accessible from the GUI, fading in and out.
+There is one function not accessible from the GUI: fading in and out.
 
 To fade out the music, use the browser or a curl command with this URL:
 
@@ -64,4 +64,12 @@ Likewise, to fade in the music, use the browser or a curl command with this URL:
 
 `http://[server name or IP]/fade-in?300`
 
-The above example will wade in the music over about five minutes.
+The above example will fade in the music over about five minutes.
+
+### Future Plans
+
+The previous incarnation of Buddybox would create a fresh playlist every time it was rebooted, and it rebooted every morning. This resulted in me still hearing some songs too frequent for my taste. To ensure maximum variety in the music I'm hearing I need to make sure the entire playlist is played before a new one is regenerated, reboot or not. That means enabling the playback to pick up where it left off in the playlist if mpv is terminated or the Pi is rebooted. I know how I'm going to do it, it just needs to be implemented. Since mplayer did not offer the ability to start from a specific track in a playlist that I needed to do this, switching to mpv was the first step.
+
+The creation of the playlist will be broken out into a separate script for this, as well.
+
+I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist.
