@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Use the first argument if it exists, otherwise default to 60
+DIRECTION=$1
+DURATION=${2:-60}
+
+SOCKET="/tmp/mpv-socket"
+
+# Get paused status
+PAUSED=$(echo '{ "command": ["get_property", "pause"] }' | socat - /tmp/mpv-socket | jq '.data')
+
+source audio-device
+if [ "$DIRECTION" = "in" ]; then
+VOLUME=$DEFAULT_VOLUME
+else
+VOLUME=$(amixer -c "$AUDIO_CARD" sget "$MIXER_CONTROL" | grep -Po '\[\d+%\]' | head -1 | tr -d '[]%')
+fi
+
+# Calculate sleep interval (Time / Steps)
+# bc is used for floating point math
+SLEEP_INTERVAL=$(echo "scale=4; $DURATION / $VOLUME" | bc)
+
+if [ "$DIRECTION" = "out" ]; then
+
+# FADE OUT
+# Fade out music
+for i in $(seq "$VOLUME" -1 0 ); do
+	amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "${i}%" -M
+	sleep "$SLEEP_INTERVAL"
+done
+
+# Mute playback device for good measure
+amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% mute -M > /dev/null 2>&1
+
+# Ensure we are actually playing before sending pause command
+if [ "$PAUSED" = "false" ]; then
+	echo '{ "command": ["cycle", "pause"] }' | socat - "${SOCKET}" > /dev/null
+fi
+
+elif [ "$DIRECTION" = "in" ]; then
+
+# FADE IN
+# Ensure playback device is unmuted
+amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% unmute -M > /dev/null 2>&1
+
+# Ensure we are actually paused before sending resume command
+if [ "$PAUSED" = "true" ]; then
+    echo '{ "command": ["cycle", "pause"] }' | socat - "${SOCKET}" > /dev/null
+fi
+
+# Start fading in music
+for i in $(seq 0 "$DEFAULT_VOLUME"); do
+    amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "${i}%" -M
+    sleep "$SLEEP_INTERVAL"
+done
+
+fi
+

@@ -9,24 +9,33 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
-# Install all updates and the required components
-echo "Updating OS and installing required components"
-apt update
-apt upgrade -y
-apt install -y mplayer ffmpeg
+read -p "Install all available updates? [y/N]: " choice
 
-# Make the files executable and put them in /usr/local/bin
+choice="${choice:-n}"
+choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
+
+if [ "$choice" = "y" ]; then
+	echo "Updating OS..."
+	apt update
+	apt upgrade -y
+fi
+
+# Install required components
+echo "Installing required components..."
+apt install -y mplayer ffmpeg socat bc jq
+
+# Make the files executable and copy them to /usr/local/bin
 echo "Copying files"
-chmod +x play-music server.py pause next prev fade-in fade-out track
-cp play-music server.py pause next prev fade-in fade-out track /usr/local/bin/
+chmod +x buddybox buddyboxUI.py pause next prev fade-in fade-out track
+cp buddybox buddyboxUI.py pause next prev fade-in fade-out track /usr/local/bin/
 
-# Make the web directory and move index.html
+# Make the web directory and copy index.html to it
 mkdir -p /var/www/html
 cp index.html /var/www/html
 
 # Set the web GUI and play-music scripts to start on reboot by adding them to cron
-NEW_JOB1="@reboot /usr/local/bin/server.py > /dev/null 2>&1 &"
-NEW_JOB2="@reboot /usr/local/bin/play-music &"
+NEW_JOB1="@reboot /usr/local/bin/buddyboxUI.py > /dev/null 2>&1 &"
+NEW_JOB2="@reboot /usr/local/bin/buddybox &"
 
 # Add the job only if it doesn't already exist
 (crontab -l 2>/dev/null; echo "$NEW_JOB1") | sort -u | crontab -

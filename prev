@@ -1,2 +1,0 @@
-#!/bin/sh
-echo "pt_step -1" > /tmp/mplayer-control

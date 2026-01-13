@@ -1,0 +1,4 @@
+#!/bin/bash
+
+SOCKET="/tmp/mpv-socket"
+echo '{ "command": ["playlist-next"] }' | socat - "$SOCKET" > /dev/null

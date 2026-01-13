@@ -1,10 +1,9 @@
 #!/bin/bash
 
-current_file=$(readlink /proc/$(pidof mplayer)/fd/* | grep -v '\(/dev/\|pipe:\|socket:\)' | tail -n 1 )
-current_file_playlist_path=$(echo "$current_file" | sed 's|^/mnt/music|.|')
+current_file=$(echo '{ "command": ["get_property", "path"] }' | socat - /tmp/mpv-socket | jq -r '.data')
 
 # Search for the current file in the playlist and get its line number
-TRACK_NUMBER=$(grep -nF "$current_file_playlist_path" /mnt/music/playlist | cut -d: -f1)
+TRACK_NUMBER=$(grep -nF "$current_file" /mnt/music/playlist | cut -d: -f1)
 
 # Get the total number of tracks for context (e.g., "Track 5 of 1200")
 TOTAL_TRACKS=$(wc -l < /mnt/music/playlist)
