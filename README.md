@@ -98,6 +98,6 @@ By necessity, creation of the playlist will be broken out into a separate script
 
 I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist. It will also have to handle gracefully switching to the new playlist when the last track on the old one finishes playing.
 
-I'm going to integrate this script with Home Assistant. I want it to automatically fade in/out the music when a certain lamp is turned on/off. I already have most of this figured out and just have to actually implement it.
+I'm going to integrate this script with Home Assistant. I want it to automatically fade in/out the music when a certain lamp is turned on/off. I also want a way to prevent playback, like if the Pi is rebooted or if I open the GUI and click the Play button while that same light is off. I already have most of this figured out, I just have to actually implement it.
 
 I'd like to move whatever I can into the Python script. I'm still a relative Python n00b, but I know bash like the back of my hand, so I stuck to what I knew in the interest of getting it up and running. I also leaned quite a bit on Gemini for the Python bits, but I reviewed its source and made my own adjustments. I learned more than one language by reading source code I didn't write and changing stuff to see what happened, so I expect Python will be somewhat the same.
