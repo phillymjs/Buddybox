@@ -22,7 +22,7 @@ fi
 
 # Install required components
 echo "Installing required components..."
-apt install -y mplayer ffmpeg socat bc jq
+apt install -y mpv ffmpeg socat bc jq
 
 # Make the files executable and copy them to /usr/local/bin
 echo "Copying files"
