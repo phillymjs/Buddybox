@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Configuration
+LOG_FILE="/home/administrator/buddybox.log"
+
+# The Logging Function
+log() {
+    # If no arguments are passed to the function, do nothing
+    [[ -z "$1" ]] && return
+
+    local message="$@"
+    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+
+    # 1. Print to Terminal
+    #echo "$timestamp $message"
+
+    # 2. Append to Log File
+    echo "$timestamp $message" >> "$LOG_FILE"
+}
+
+# --- This part handles command line calls ---
+# If this script is executed with arguments (e.g., ./logger "rebooted")
+# "$@" represents all arguments passed to the script itself.
+if [[ $# -gt 0 ]]; then
+    log "$@"
+fi
