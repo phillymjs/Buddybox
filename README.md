@@ -24,6 +24,8 @@ The old version required me to SSH in if I wanted to skip a track. I eventually 
 
 In the old version, if I wanted to add new music I had shut down the Pi, transfer the USB thumbdrive to my Mac, and run a local sync job. That was partly due to the old one running on a Pi 2 with a separate wi-fi dongle that was not great-- it frequently dropped off the network. Since the new one is on a Pi 3 with built in and more robust wireless networking, it can handle network syncing-- I enabled public key auth for the root user so I can run a sync job over the network. Finding instructions to duplicate that setup is an exercise left for the reader.
 
+In the old version, I had the Pi set to reboot daily, and which caused a fresh playlist to be generated daily. This resulted in me hearing some songs too often for my taste despite having thousands on the thumb drive. The new version adds a tracking mechanism so it can pick up where it left off if mpv is terminated or the Pi is rebooted. I'm not sure if I'm going to set the new Pi to reboot on a schedule, but if I do it won't be more frequent than weekly.
+
 ### Installation
 
 - Make sure you have a root prompt.
@@ -92,11 +94,9 @@ The above example will fade in the music over about five minutes.
 
 ### Future Plans
 
-The previous incarnation of Buddybox would create a fresh playlist every time it was rebooted, and it rebooted every morning. This resulted in me still hearing some songs too frequently for my taste. To ensure maximum variety in the music I need to make sure the entire playlist is played before a new one is regenerated, reboot or not. That means enabling the playback to pick up where it left off in the playlist if mpv is terminated or the Pi is rebooted. I know how I'm going to do it, it just needs to be implemented. Since mplayer did not offer the ability to start from a specific track in a playlist, switching to mpv was the first step toward implementation.
+Generate a new playlist when the end of the current playlist is reached, and being playing it once the last song on the old playlist finished playing.
 
-By necessity, creation of the playlist will be broken out into a separate script for this, as well.
-
-I also need to implement logic so the script knows when to pick up where it left off and when to regenerate the playlist. It will also have to handle gracefully switching to the new playlist when the last track on the old one finishes playing.
+The above may require breaking out creation of the playlist into a separate script.
 
 I'm going to integrate this script with Home Assistant. I want it to automatically fade in/out the music when a certain lamp is turned on/off. I also want a way to prevent playback, like if the Pi is rebooted or if I open the GUI and click the Play button while that same light is off. I already have most of this figured out, I just have to actually implement it.
 
