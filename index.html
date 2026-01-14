@@ -142,7 +142,7 @@
 
         <div class="stats-container">
             <p class="stats-line" id="playlist-generated">Playlist Generated: Loading...</p>
-            <p class="stats-line" id="sync-info">Loading...</p>
+            <p class="stats-line" id="sync-info">Last Sync: Loading...</p>
         </div>
     </div>
 
@@ -190,6 +190,10 @@ function updateAll() {
                 document.getElementById('playlist-generated').textContent = "Playlist Generated: " + data.playlist_time;
             }
 
+            if (data.lastsync_time) {
+                document.getElementById('sync-info').textContent = "Last Sync: " + data.lastsync_time;
+            }
+
             document.getElementById('track-stats').textContent = data.stats;
         })
         .catch(() => {
@@ -197,16 +201,10 @@ function updateAll() {
         });
 }
 
-function updateSync() {
-    fetch('/lastsync')
-        .then(res => res.text())
-        .then(data => { document.getElementById('sync-info').textContent = "Last Sync: " + data; });
-}
-
 window.addEventListener('keydown', function(e) {
     switch(e.code) {
         case 'Space':
-            e.preventDefault(); // Stop page from scrolling
+            e.preventDefault();
             control('pause');
             break;
         case 'ArrowRight':
@@ -220,7 +218,6 @@ window.addEventListener('keydown', function(e) {
 
 setInterval(updateAll, 1500);
 updateAll();
-updateSync();
 </script>
 </body>
 </html>
