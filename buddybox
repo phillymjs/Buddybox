@@ -3,12 +3,15 @@
 # Get the path to me
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 
+# Add the logger function
+source $SCRIPT_DIR/logger
+
 # Ensure runtime directory is set for audio services
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 
 # Cleanup function to kill background processes on exit
 cleanup() {
-    echo -e "\nShutting down..."
+    log "Shutting down..."
     sudo killall -9 mpv 2>/dev/null
     kill $(jobs -p) 2>/dev/null
     exit 0
@@ -30,25 +33,26 @@ if [[ -b /dev/sda1 ]]; then
         mount -o defaults /dev/sda1 /mnt/music
     fi
 else
-    echo "USB drive not found, exiting"
+    log "USB drive not found, exiting"
     exit 1
 fi
 
 # Audio Hardware Detection
 if aplay -l | grep -q "\[USB2.0 Device\]"; then
-    echo "USB Speaker detected."
+    log "Output Device: USB Speaker"
     AUDIO_CARD="Device"
     MPV_DEVICE="alsa/plughw:CARD=Device"
     MIXER_CONTROL="PCM"
     DEFAULT_VOLUME=40
 else
-    echo "USB Speaker not found. Falling back to Headphones."
+    log "Output Device: Headphones"
     AUDIO_CARD="Headphones"
     MPV_DEVICE="alsa/plughw:CARD=Headphones"
     MIXER_CONTROL="PCM"
     DEFAULT_VOLUME=85
 fi
 
+# Record the info for other scripts to use
 cat << EOF > "$SCRIPT_DIR/audio-device"
 AUDIO_CARD="$AUDIO_CARD"
 MPV_DEVICE="MPV_DEVICE"
@@ -59,15 +63,21 @@ EOF
 # Prepare MPV Output Log and Playlist
 mpvLog="/mnt/music/mpv.log"
 
-echo -n "Generating random playlist..."
-find /mnt/music -type f \( -iname "*.mp3" -o -iname "*.m4a" \) ! -path "*/.*" ! -name "._*" | sort -R > /mnt/music/playlist
-echo "done."
+if [ -f "/mnt/music/track" ]; then
+    start_track=$(cat /mnt/music/track | tr -d -c '0-9')
+    log "Track file found, resuming playback at item $(echo $start_track+1 | bc)."
+else
+    log "No track file found, generating fresh playlist..."
+    start_track=0
+    find /mnt/music -type f \( -iname "*.mp3" -o -iname "*.m4a" \) ! -path "*/.*" ! -name "._*" | sort -R > /mnt/music/playlist
+    log "Playlist generation complete."
+fi
 
-# Unmute and set volume to 0%
+#Unmute and set volume to 0%
 amixer -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% unmute -M > /dev/null 2>&1
 
 # Start mpv in background
-echo "Starting playback on $AUDIO_CARD..."
+log "Starting playback on $AUDIO_CARD..."
 # --no-video prevents it from looking for a display
 # --gapless-audio=yes ensures smooth transitions
 # --msg-level=ao/pipewire=no stops the config file errors
@@ -78,12 +88,14 @@ echo "Starting playback on $AUDIO_CARD..."
      --msg-level=ao/pipewire=no \
      --input-ipc-server=/tmp/mpv-socket \
      --playlist=/mnt/music/playlist \
+     --playlist-start="$start_track" \
      --loop-playlist=inf & echo "PID: $!") > "$mpvLog" 2>&1 &
 
 # Brief sleep to allow mpv to initialize the audio device
 sleep 1
 
-. $SCRIPT_DIR/bb-fade in 20
+log "Fading in music..."
+. $SCRIPT_DIR/bb-fade in 10
 
 # Fade in music
 #echo "Fading in music to ${DEFAULT_VOLUME}%..."
