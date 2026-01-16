@@ -181,11 +181,11 @@ function updateAll() {
             if (playPauseBtn) {
                 const iconContainer = document.getElementById('status-icon');
                 const textSpan = playPauseBtn.querySelector('span:not(.icon)');
-                
+                    
                 if (data.locked) {
                     // Lockout State
-                    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="#ff4444" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-                    textSpan.textContent = "Locked Out";
+		    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="#ff4444" d="M17,9H16V6a4,4,0,0,0-8,0V9H7a2,2,0,0,0-2,2V19a2,2,0,0,0,2,2H17a2,2,0,0,0,2-2V11A2,2,0,0,0,17,9ZM10,6a2,2,0,0,1,4,0V9H10Z"/></svg>';
+                    textSpan.textContent = "Play Disabled";
                     playPauseBtn.disabled = true;
                 } else {
                     // Normal State
