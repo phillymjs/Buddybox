@@ -25,7 +25,7 @@ class State:
     is_paused = False
     
 class MPVTracker(threading.Thread):
-    def __init__(self, socket_path=MPV_SOCKET, output_file="/mnt/music/track"):
+    def __init__(self, socket_path=MPV_SOCKET, output_file="/mnt/music/.track"):
         super().__init__()
         self.socket_path = socket_path
         self.output_file = output_file
@@ -148,9 +148,26 @@ class BuddyBoxHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         clean_path = self.path.split('?')[0]
         
+        # Helper to check if the request is from a CLI tool
+        user_agent = self.headers.get('User-Agent', '').lower()
+        is_cli = 'curl' in user_agent or 'wget' in user_agent
+        
+        def handle_response():
+            """Sends redirect for browsers, 200 OK for CLI"""
+            if is_cli:
+                self.send_response(200)
+                self.end_headers()
+            else:
+                self.send_response(302)
+                self.send_header('Location', '/')
+                self.end_headers()
+                
         if clean_path == '/api/status':
             path, is_paused = self.get_mpv_status()
             State.is_paused = is_paused
+            
+            # Check for the lockout file
+            is_locked = os.path.exists(os.path.join(MUSIC_DIR, ".lockout"))
             
             if not path:
                 State.current_file = None
@@ -159,7 +176,8 @@ class BuddyBoxHandler(SimpleHTTPRequestHandler):
                     "stats": "", 
                     "playlist_time": self.get_playlist_time(),
                     "lastsync_time": self.get_lastsync_time(),
-                    "paused": True
+                    "paused": True,
+                    "locked": is_locked 
                 }
             else:
                 self.update_metadata(path)
@@ -169,7 +187,8 @@ class BuddyBoxHandler(SimpleHTTPRequestHandler):
                     "stats": f"Track {State.track_index} of {State.total_count}",
                     "playlist_time": self.get_playlist_time(),
                     "lastsync_time": self.get_lastsync_time(),
-                    "paused": State.is_paused
+                    "paused": State.is_paused,
+                    "locked": is_locked
                 }
                 
             self.send_response(200)
@@ -179,12 +198,21 @@ class BuddyBoxHandler(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(response).encode())
             return
         
+        elif clean_path == '/lock':
+            subprocess.Popen(["/usr/local/bin/bb-lock", "1"])
+            handle_response()
+            return
+        
+        elif clean_path == '/unlock':
+            subprocess.Popen(["/usr/local/bin/bb-lock", "0"])
+            handle_response()
+            return
+        
         elif clean_path in ['/next', '/prev', '/pause']:
             subprocess.Popen([f"/usr/local/bin/bb-{clean_path.strip('/')}"])
-            self.send_response(200)
-            self.end_headers()
+            handle_response()
             return
-
+        
         elif clean_path in ['/fade-out', '/fade-in']:
             direction = "out" if "fade-out" in clean_path else "in"
             query = self.path.split('?')
@@ -192,8 +220,7 @@ class BuddyBoxHandler(SimpleHTTPRequestHandler):
             cmd = ["/usr/local/bin/bb-fade", direction]
             if duration: cmd.append(duration)
             subprocess.Popen(cmd)
-            self.send_response(200)
-            self.end_headers()
+            handle_response()
             return
         
         elif clean_path in ['/sick', '/fix']:
@@ -201,14 +228,13 @@ class BuddyBoxHandler(SimpleHTTPRequestHandler):
             if State.current_file and len(State.metadata) >= 3:
                 log_entry = f"{State.metadata[0]} - {State.metadata[1]} - {State.metadata[2]}\n"
                 with open(log, "a") as l: l.write(log_entry)
-            
+                
             if clean_path == '/sick':
                 subprocess.run(["/usr/local/bin/bb-next"])
                 
-            self.send_response(200)
-            self.end_headers()
+            handle_response()
             return
-            
+        
         return super().do_GET()
         
 if __name__ == '__main__':

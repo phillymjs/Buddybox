@@ -1,0 +1,17 @@
+#!/bin/bash
+
+LOCKFILE="/mnt/music/.lockout"
+
+# Get the path to me
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+
+# Use the first argument
+LOCK_COMMAND=$1
+
+if [ "$LOCK_COMMAND" = 1 ]; then
+    touch "$LOCKFILE"
+elif [ "$LOCK_COMMAND" = 0 ]; then
+    if [ -f "$LOCKFILE" ]; then
+        rm "$LOCKFILE"
+    fi
+fi

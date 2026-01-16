@@ -63,6 +63,11 @@
             outline: none;
             transition: transform 0.05s;
         }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
         
         button span.icon { 
             color: #1DB954; 
@@ -81,13 +86,13 @@
         .stats-line { color: #888; font-size: 0.75rem; font-weight: bold; margin: 0; }
 
         /* Mobile-Ready Active States */
-        button:active { 
+        button:not(:disabled):active { 
             background: #1DB954 !important; 
             color: white !important; 
             transform: scale(0.92); 
         }
         
-        button:active span.icon { 
+        button:not(:disabled):active span.icon { 
             color: white !important; 
         }
 
@@ -175,14 +180,23 @@ function updateAll() {
 
             if (playPauseBtn) {
                 const iconContainer = document.getElementById('status-icon');
-                const text = playPauseBtn.querySelector('span:not(.icon)');
+                const textSpan = playPauseBtn.querySelector('span:not(.icon)');
                 
-                if (data.paused) {
-                    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
-                    text.textContent = "Play";
+                if (data.locked) {
+                    // Lockout State
+                    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="#ff4444" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+                    textSpan.textContent = "Locked Out";
+                    playPauseBtn.disabled = true;
                 } else {
-                    iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 19h4V5h-4v14zm-8 0h4V5H6v14z"/></svg>';
-                    text.textContent = "Pause";
+                    // Normal State
+                    playPauseBtn.disabled = false;
+                    if (data.paused) {
+                        iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+                        textSpan.textContent = "Play";
+                    } else {
+                        iconContainer.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 19h4V5h-4v14zm-8 0h4V5H6v14z"/></svg>';
+                        textSpan.textContent = "Pause";
+                    }
                 }
             }
 
@@ -202,18 +216,23 @@ function updateAll() {
 }
 
 window.addEventListener('keydown', function(e) {
-    switch(e.code) {
-        case 'Space':
-            e.preventDefault();
-            control('pause');
-            break;
-        case 'ArrowRight':
-            control('next');
-            break;
-        case 'ArrowLeft':
-            control('prev');
-            break;
-    }
+    // Only allow keyboard controls if not locked
+    fetch('/api/status').then(res => res.json()).then(data => {
+        if (data.locked) return;
+        
+        switch(e.code) {
+            case 'Space':
+                e.preventDefault();
+                control('pause');
+                break;
+            case 'ArrowRight':
+                control('next');
+                break;
+            case 'ArrowLeft':
+                control('prev');
+                break;
+        }
+    });
 });
 
 setInterval(updateAll, 1500);
