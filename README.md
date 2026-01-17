@@ -13,10 +13,11 @@ The music is supplied from my iTunes library (I know it's called Music.app now b
 In the original version, the buddybox script simply ran a find command to create a random playlist of all the music files on the thumbdrive and then started mplayer playing that list on endless loop. I needed to SSH in to skip tracks, and had to shut the Pi down and transfer the thumbdrive to my Mac to add new music.
 
 ### Features New to This Version
-- **Based on mpv:** Some features I wanted to add to the Buddybox required features not present in mplayer.
+- **Based on mpv:** Some features I wanted to add to the project required features not present in mplayer.
 - **Web UI:** Track info display and playback control (Play/Pause/Skip) via browser.
 - **Smart Audio:** Automatically detects a connected USB speaker, falls back to the 3.5mm jack if one isn't found. (Some tweaking may be required for your specific USB speaker).
-- **Soft Start:** Music fades in gracefully rather than jarringly starting at full volume.
+- **Less Music Repetition:** Keeps track of where it is in the playlist and starts up from that song if rebooted. The original version regenerated the playlist on every reboot, which resulted in some songs being heard quite frequently.
+- **Soft Start:** Music fades in gracefully rather than starting at full volume.
 - **Playlist Management:** Dedicated "Tired of This" and "Fix Tags" buttons to help me curate my library.
 - **Network Sync:** Supports rsync over SSH (via passwordless root login) for easy music updates.
 
@@ -31,6 +32,8 @@ Install.sh will offer to install all available updates, then install the needed 
 After that it will copy all the scripts to /usr/local/bin, create /var/www/html and copy index.html into it.
 
 Finally, it adds two items to the crontab to launch buddybox and buddyboxUI.py on reboot.
+
+Settings are stored in the **.env** file. Currently only used by the Bash portion of the project, but soon the Python portion will also take its settings from there.
 
 ### Usage
 
