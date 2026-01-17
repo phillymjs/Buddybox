@@ -1,17 +1,23 @@
 #!/bin/bash
 
-LOCKFILE="/mnt/music/.lockout"
+# USAGE:
+# To lock playback: bb-lock 1
+# To unlock playback: bb-lock 0
 
 # Get the path to me
-SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# Use the first argument
+source $SCRIPT_DIR/.env
+source $SCRIPT_DIR/logger
+
 LOCK_COMMAND=$1
 
 if [ "$LOCK_COMMAND" = 1 ]; then
+    log "Playback locked."
     touch "$LOCKFILE"
 elif [ "$LOCK_COMMAND" = 0 ]; then
     if [ -f "$LOCKFILE" ]; then
+        log "Playback unlocked."
         rm "$LOCKFILE"
     fi
 fi

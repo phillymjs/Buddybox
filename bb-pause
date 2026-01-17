@@ -1,20 +1,13 @@
-#!/bin/sh
+#!/bin/bash
 
-SOCKET="/tmp/mpv-socket"
+# Get the path to me
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-# Audio Hardware Detection
-if aplay -l | grep -q "\[USB2.0 Device\]"; then
-    AUDIO_CARD="Device"
-    MIXER_CONTROL="PCM"
-    FADE_TARGET=40
-else
-    AUDIO_CARD="Headphones"
-    MIXER_CONTROL="PCM"
-    FADE_TARGET=85
-fi
+source $SCRIPT_DIR/.env
+source $SCRIPT_DIR/audio-device
 
 # Ensure volume is at the target level and unmuted
-amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" ${FADE_TARGET}% unmute -M > /dev/null 2>&1
+amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" $DEFAULT_VOLUME% unmute -M > /dev/null 2>&1
 
-# Toggle pause via mpv socket
-echo '{ "command": ["cycle", "pause"] }' | socat - "${SOCKET}" > /dev/null
+# Send "pause" command to mpv
+echo '{ "command": ["cycle", "pause"] }' | socat - "$SOCKET" > /dev/null

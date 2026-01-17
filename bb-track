@@ -1,12 +1,17 @@
 #!/bin/bash
 
-current_file=$(echo '{ "command": ["get_property", "path"] }' | socat - /tmp/mpv-socket | jq -r '.data')
+# Get the path to me
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source $SCRIPT_DIR/.env
+
+current_file=$(echo '{ "command": ["get_property", "path"] }' | socat - "$SOCKET" | jq -r '.data')
 
 # Search for the current file in the playlist and get its line number
-TRACK_NUMBER=$(grep -nF "$current_file" /mnt/music/playlist | cut -d: -f1)
+TRACK_NUMBER=$(grep -nF "$current_file" "$PLAYLIST" | cut -d: -f1)
 
 # Get the total number of tracks for context (e.g., "Track 5 of 1200")
-TOTAL_TRACKS=$(wc -l < /mnt/music/playlist)
+TOTAL_TRACKS=$(wc -l < "$PLAYLIST")
 
 metadata=$(ffprobe -v error -show_entries format_tags=artist,album,title,date,TYER -of default=noprint_wrappers=1 "$current_file")
 artist=$(echo "$metadata" | grep -i "^TAG:artist=" | cut -d'=' -f2-)
