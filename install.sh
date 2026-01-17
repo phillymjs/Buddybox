@@ -27,7 +27,7 @@ apt install -y mpv ffmpeg socat bc jq
 # Make the files executable and copy them to /usr/local/bin
 echo "Copying files"
 chmod +x buddybox buddyboxUI.py logger bb-pause bb-next bb-prev bb-fade bb-lock bb-track
-cp buddybox buddyboxUI.py logger bb-pause bb-next bb-prev bb-fade bb-lock bb-track /usr/local/bin/
+cp buddybox buddyboxUI.py .env logger bb-pause bb-next bb-prev bb-fade bb-lock bb-track /usr/local/bin/
 
 # Make the web directory and copy index.html to it
 mkdir -p /var/www/html
