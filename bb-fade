@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # Get the path to me
-SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+SOCKET="/tmp/mpv-socket"
 
 # Use the first argument if it exists, otherwise default to 60
 DIRECTION=$1
 DURATION=${2:-60}
 
-SOCKET="/tmp/mpv-socket"
-
 # Get paused status
-PAUSED=$(echo '{ "command": ["get_property", "pause"] }' | socat - /tmp/mpv-socket | jq '.data')
+PAUSED=$(echo '{ "command": ["get_property", "pause"] }' | socat - "${SOCKET}" | jq '.data')
 
 source $SCRIPT_DIR/audio-device
 if [ "$DIRECTION" = "in" ]; then
@@ -19,8 +19,7 @@ else
 VOLUME=$(amixer -c "$AUDIO_CARD" sget "$MIXER_CONTROL" | grep -Po '\[\d+%\]' | head -1 | tr -d '[]%')
 fi
 
-# Calculate sleep interval (Time / Steps)
-# bc is used for floating point math
+# Calculate sleep interval
 SLEEP_INTERVAL=$(echo "scale=4; $DURATION / $VOLUME" | bc)
 
 if [ "$DIRECTION" = "out" ]; then
