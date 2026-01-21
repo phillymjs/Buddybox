@@ -28,6 +28,9 @@
             min-height: 100px;
             color: #eeeeee;
             margin-bottom: 0.5rem;
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 20px;
         }
 
         .track-line { margin-bottom: 2px; }
@@ -37,20 +40,20 @@
             color: #888;
             font-size: 0.75rem;
             font-weight: bold;
-            margin-bottom: 4px;
+            margin-bottom: 8px;
             display: block;
         }
 
         .separator {
             border-bottom: 1px solid #333;
-            margin-bottom: 2rem;
+            margin-bottom: 20px;
         }
 
         .row { display: grid; gap: 12px; }
         .nav-row { grid-template-columns: 1fr 1fr 1fr; }
         .meta-row { 
             grid-template-columns: 1fr 1fr; margin-top: 20px;
-            padding-top: 20px; border-top: 1px dashed #444;
+            padding-top: 20px; border-top: 1px solid #333;
         }
         
         button { 
@@ -115,9 +118,9 @@
         </div>
 
         <span id="track-stats"></span>
-        <div class="separator"></div>
-
-        <div class="row nav-row">
+	<div class="separator"></div>
+        
+	<div class="row nav-row">
             <button onclick="control('prev')">
                 <span class="icon"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 18V6h2v12H6zm3.5-6L18 18V6l-8.5 6z"/></svg></span>
                 <span>Prev</span>
