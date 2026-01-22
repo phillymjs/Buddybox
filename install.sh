@@ -9,6 +9,11 @@ if [[ $EUID -ne 0 ]]; then
 	exit 1
 fi
 
+# Get the path to me
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source $SCRIPT_DIR/.env
+
 read -p "Install all available updates? [y/N]: " choice
 
 choice="${choice:-n}"
@@ -33,14 +38,26 @@ cp buddybox buddyboxUI.py .env logger bb-pause bb-next bb-prev bb-fade bb-lock b
 mkdir -p /var/www/html
 cp index.html /var/www/html
 
+echo "Adding cron jobs..."
 # Set the web GUI and play-music scripts to start on reboot by adding them to cron
-NEW_JOB1="@reboot /usr/local/bin/buddyboxUI.py > /dev/null 2>&1 &"
-NEW_JOB2="@reboot /usr/local/bin/buddybox &"
+CRON_JOB1='@reboot echo "$(date "+\%Y-\%m-\%d \%H:\%M:\%S") ----- System Rebooted -----" >> "'$LOGFILE'"'
+CRON_JOB2="@reboot /usr/local/bin/buddyboxUI.py > /dev/null 2>&1 &"
+CRON_JOB3="@reboot /usr/local/bin/buddybox &"
 
 # Add the job only if it doesn't already exist
-(crontab -l 2>/dev/null; echo "$NEW_JOB1") | sort -u | crontab -
-(crontab -l 2>/dev/null; echo "$NEW_JOB2") | sort -u | crontab -
+(crontab -l 2>/dev/null; echo "$CRON_JOB1") | sort -u | crontab -
+(crontab -l 2>/dev/null; echo "$CRON_JOB2") | sort -u | crontab -
+(crontab -l 2>/dev/null; echo "$CRON_JOB3") | sort -u | crontab -
 
-echo "Installation complete. Reboot to start playing or run this command:"
-echo
-echo "buddybox & buddyboxUI.py > /dev/null 2>&1 &"
+echo ""
+echo "Installation complete. Music will start on reboot, unless lockout is enabled (see README)."
+echo ""
+read -p "Start playback now (without rebooting)? [y/N]: " choice
+
+choice="${choice:-n}"
+choice=$(echo "$choice" | tr '[:upper:]' '[:lower:]')
+
+if [ "$choice" = "y" ]; then
+        echo "Starting playback..."
+        buddybox & buddyboxUI.py > /dev/null 2>&1 &
+fi
