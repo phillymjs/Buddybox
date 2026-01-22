@@ -89,7 +89,7 @@ log "Launching mpv..."
      --input-ipc-server="$SOCKET" \
      --playlist="$PLAYLIST" \
      --playlist-start="$start_track" \
-     --loop-playlist=inf) 2>&1 &
+     --loop-playlist=inf) > /dev/null 2>&1 &
 
 # Wait for mpv socket to become responsive
 MAX_RETRIES=20
