@@ -21,7 +21,7 @@ source $SCRIPT_DIR/audio-device
 if [ "$DIRECTION" = "in" ]; then
     VOLUME=$DEFAULT_VOLUME
 else
-    VOLUME=$(amixer -c "$AUDIO_CARD" sget "$MIXER_CONTROL" | grep -Po '\[\d+%\]' | head -1 | tr -d '[]%')
+    VOLUME=$(amixer -c "$AUDIO_CARD" -M sget "$MIXER_CONTROL" | grep -Po '\[\d+%\]' | head -1 | tr -d '[]%')
 fi
 
 # Calculate sleep interval
