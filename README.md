@@ -83,7 +83,7 @@ To move to the previous track or the next track:
 
 `http://[address]/prev` or `http://[address]/next`
 
-To add the current track to the "Sick of This" list:
+To add the current track to the "Sick of This" list (and automatically skip to the next track):
 
 `http://[address]/sick`
 
