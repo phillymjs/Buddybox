@@ -6,6 +6,8 @@ Much-improved version of a Raspberry Pi-based music player I first created in 20
 
 [Background](#background)
 
+[New Features](#features-new-to-this-version)
+
 [Installation](#installation)
 
 [Usage](#usage)
@@ -29,15 +31,16 @@ The music is supplied from my iTunes library (I know it's called Music.app now b
 
 ### Features New to This Version
 
-In the original version, the buddybox script simply ran a find command to create a random playlist of all the music files on the thumbdrive and then started mplayer playing that list on endless loop. There was no UI to speak of, I needed to SSH in to skip tracks. It was set to reboot daily, and regenerated the playlist on reboot, so some songs were played frequently enough that I noticed. To add new music, I had to shut the Pi down and transfer the thumbdrive to my Mac. I addressed those shortcomings and made additional improvements:
+In the original version, the buddybox script simply ran a find command to create a random playlist of all the music files on the thumbdrive and then started mplayer playing that list on endless loop. There was no UI to speak of, I needed to SSH in to skip tracks. It was set to reboot daily and regenerated the playlist on reboot, so some songs were played frequently enough that I noticed. Playback was started and stopped via cron jobs, which was inflexible. To add new music, I had to shut the Pi down and transfer the thumbdrive to my Mac. I addressed those shortcomings and made additional improvements:
 
 - **Based on mpv:** Some features I wanted to add to the project required features not present in mplayer.
 - **Web UI:** Track info display and playback control (Play/Pause/Skip) via browser.
 - **Smart Audio:** Automatically detects a connected USB speaker, falls back to the 3.5mm jack if one isn't found. (Some tweaking may be required for your specific USB speaker).
-- **More Music Variety:** Keeps track of where it is in the playlist and starts up from that song if rebooted.
+- **Less Repitition:** Keeps track of where it is in the playlist and picks up where it left off if rebooted.
 - **Soft Start:** Music fades in gracefully rather than starting at full volume.
 - **Playlist Management:** Dedicated "Tired of This" and "Fix Tags" buttons to help me curate my library.
 - **Network Sync:** Supports rsync over SSH (via passwordless root login) for easy music updates.
+- **API:** Allows control via external systems, like Home Assistant.
 
 ### Installation
 
@@ -48,7 +51,7 @@ In the original version, the buddybox script simply ran a find command to create
 
 Install.sh will offer to install all available updates, then install the needed components for the scripts: mpv, ffmpeg, socat, bc, and jq
 
-Next, it will copy all the scripts to /usr/local/bin, and copy index.html, manifest.json, and the icons folder into /var/www/html, creating it first if needed.
+Next, it will copy all the scripts to /usr/local/bin, and copy index.html and the icons folder into /var/www/html, creating it first if needed.
 
 Finally, it adds three items to the crontab that will run on boot: one clears the log file and makes an entry in it noting boot time, the other two launch buddybox and buddyboxUI.py.
 
