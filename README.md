@@ -48,7 +48,7 @@ In the original version, the buddybox script simply ran a find command to create
 
 Install.sh will offer to install all available updates, then install the needed components for the scripts: mpv, ffmpeg, socat, bc, and jq
 
-Next, it will copy all the scripts to /usr/local/bin, and copy index.html into /var/www/html, creating it first if needed.
+Next, it will copy all the scripts to /usr/local/bin, and copy index.html, manifest.json, and the icons folder into /var/www/html, creating it first if needed.
 
 Finally, it adds three items to the crontab that will run on boot: one clears the log file and makes an entry in it noting boot time, the other two launch buddybox and buddyboxUI.py.
 
