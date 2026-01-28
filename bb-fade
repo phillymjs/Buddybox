@@ -2,7 +2,7 @@
 
 # USAGE:
 # To fade out the music: bb-fade out 60 -> fades the music out over 10 seconds
-# To fade in the music: bb-fade in 60 -> fades the music in  over 10 seconds
+# To fade in the music: bb-fade in 60 -> fades the music in over 10 seconds
 
 # Get the path to me
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
@@ -14,6 +14,8 @@ source $SCRIPT_DIR/logger
 DIRECTION=$1
 DURATION=${2:-60}
 
+STEPS_PER_SECOND=10
+
 # Get paused status
 PAUSED=$(echo '{ "command": ["get_property", "pause"] }' | socat - "$SOCKET" | jq '.data')
 
@@ -24,18 +26,32 @@ else
     VOLUME=$(amixer -c "$AUDIO_CARD" -M sget "$MIXER_CONTROL" | grep -Po '\[\d+%\]' | head -1 | tr -d '[]%')
 fi
 
-# Calculate sleep interval
-SLEEP_INTERVAL=$(echo "scale=4; $DURATION / $VOLUME" | bc)
+# Calculate total steps based on duration
+TOTAL_STEPS=$(echo "$DURATION * $STEPS_PER_SECOND" | bc)
+# Calculate how much volume to change per step (Initial Volume / Total Steps)
+VOL_STEP=$(echo "scale=4; $VOLUME / $TOTAL_STEPS" | bc)
+# Calculate sleep interval in seconds
+SLEEP_INTERVAL=$(echo "scale=4; 1 / $STEPS_PER_SECOND" | bc)
 
 log "Starting fade-$DIRECTION, duration is $DURATION seconds..."
+
+# Capture start time in nanoseconds for drift correction
+START_TIME=$(date +%s%N)
 
 if [ "$DIRECTION" = "out" ]; then
 
     # ----- FADE OUT -----
-    # Fade out music
-    for i in $(seq "$VOLUME" -1 0 ); do
-        amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "$i%" -M
-        sleep "$SLEEP_INTERVAL"
+    # Start fading out music
+    CURRENT_VOL=$VOLUME
+    for (( i=0; i<TOTAL_STEPS; i++ )); do
+        CURRENT_VOL=$(echo "scale=4; $CURRENT_VOL - $VOL_STEP" | bc)
+        amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "${CURRENT_VOL%.*}%" -M
+
+        # Drift Correction
+        EXPECTED_END=$(echo "$START_TIME + (($i + 1) * $SLEEP_INTERVAL * 1000000000)" | bc)
+        NOW=$(date +%s%N)
+        SLEEP_NEEDED=$(echo "scale=9; ($EXPECTED_END - $NOW) / 1000000000" | bc)
+        if (( $(echo "$SLEEP_NEEDED > 0" | bc -l) )); then sleep $SLEEP_NEEDED; fi
     done
 
     # Mute playback device for good measure
@@ -49,7 +65,7 @@ if [ "$DIRECTION" = "out" ]; then
 elif [ "$DIRECTION" = "in" ]; then
 
     # ----- FADE IN -----
-    # Ensure playback device is unmuted
+    # Ensure playback device is unmuted and starting at 0
     amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% unmute -M > /dev/null 2>&1
 
     # Ensure we are actually paused before sending resume command
@@ -58,10 +74,20 @@ elif [ "$DIRECTION" = "in" ]; then
     fi
 
     # Start fading in music
-    for i in $(seq 0 "$DEFAULT_VOLUME"); do
-        amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "$i%" -M
-        sleep "$SLEEP_INTERVAL"
+    CURRENT_VOL=0
+    for (( i=0; i<TOTAL_STEPS; i++ )); do
+        CURRENT_VOL=$(echo "scale=4; $CURRENT_VOL + $VOL_STEP" | bc)
+        amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "${CURRENT_VOL%.*}%" -M
+
+        # Drift Correction
+        EXPECTED_END=$(echo "$START_TIME + (($i + 1) * $SLEEP_INTERVAL * 1000000000)" | bc)
+        NOW=$(date +%s%N)
+        SLEEP_NEEDED=$(echo "scale=9; ($EXPECTED_END - $NOW) / 1000000000" | bc)
+        if (( $(echo "$SLEEP_NEEDED > 0" | bc -l) )); then sleep $SLEEP_NEEDED; fi
     done
+
+    # Final adjustment to ensure we hit exactly the DEFAULT_VOLUME
+    amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" "$DEFAULT_VOLUME%" -M
 
 fi
 
