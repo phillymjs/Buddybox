@@ -36,7 +36,7 @@ cp buddybox buddyboxUI.py .env logger bb-pause bb-next bb-prev bb-fade bb-lock b
 
 # Make the web directory and copy index.html to it
 mkdir -p /var/www/html
-cp -r index.html manifest.json icons /var/www/html/
+cp -r index.html icons /var/www/html/
 
 echo "Adding cron jobs..."
 # Set the web GUI and play-music scripts to start on reboot by adding them to cron
