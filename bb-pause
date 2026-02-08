@@ -6,8 +6,12 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $SCRIPT_DIR/.env
 source $SCRIPT_DIR/audio-device
 
-# Ensure volume is at the target level and unmuted
-amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" $DEFAULT_VOLUME% unmute -M > /dev/null 2>&1
+# Get paused status
+PAUSED=$(echo '{ "command": ["get_property", "pause"] }' | socat - "$SOCKET" | jq '.data')
 
-# Send "pause" command to mpv
-echo '{ "command": ["cycle", "pause"] }' | socat - "$SOCKET" > /dev/null
+if [ "$PAUSED" = "true" ]; then
+    #amixer -q -c "$AUDIO_CARD" sset "$MIXER_CONTROL" 0% unmute -M > /dev/null 2>&1
+    bb-fade in 1
+else
+    echo '{ "command": ["cycle", "pause"] }' | socat - "$SOCKET" > /dev/null
+fi
