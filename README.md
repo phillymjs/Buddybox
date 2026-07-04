@@ -36,7 +36,7 @@ In the original version, the buddybox script simply ran a find command to create
 - **Based on mpv:** Some features I wanted to add to the project required features not present in mplayer.
 - **Web UI:** Track info display and playback control (Play/Pause/Skip) via browser.
 - **Smart Audio:** Automatically detects a connected USB speaker, falls back to the 3.5mm jack if one isn't found. (Some tweaking may be required for your specific USB speaker).
-- **Less Repitition:** Keeps track of where it is in the playlist and picks up where it left off if rebooted.
+- **Less Repetition:** Keeps track of where it is in the playlist and picks up where it left off if rebooted.
 - **Soft Start:** Music fades in gracefully rather than starting at full volume.
 - **Playlist Management:** Dedicated "Tired of This" and "Fix Tags" buttons to help me curate my library.
 - **Network Sync:** Supports rsync over SSH (via passwordless root login) for easy music updates.
